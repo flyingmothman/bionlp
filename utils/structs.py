@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum
 
 @dataclass
 class Annotation:
@@ -61,3 +62,18 @@ class PreprocessorConfig:
     preprocessor_config_name: str
     preprocessor_class_path: str
     preprocessor_class_init_params: dict
+
+
+class EvaluationType(Enum):
+    f1 = 0
+    accuracy = 1
+
+
+@dataclass
+class ExperimentConfig:
+    dataset_config: DatasetConfig
+    model_config: ModelConfig
+    testing_frequency: int
+    optimizer: str = 'Adam'
+    num_epochs: int = 20
+    evaluation_type: EvaluationType = EvaluationType.f1
