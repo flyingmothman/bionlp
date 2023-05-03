@@ -65,6 +65,11 @@ class PreprocessorConfig:
 
 
 class EvaluationType(Enum):
+    """
+    Different tasks can have different metrics for
+    evaluating performance. This enum attemps to
+    capture these differences.
+    """
     f1 = 0
     accuracy = 1
 
