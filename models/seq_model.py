@@ -2,8 +2,6 @@ import torch
 from torch import nn
 
 
-
-
 class SeqDefault(ModelClaC):
     def __init__(self, all_types: List[str], model_config: ModelConfig, dataset_config: DatasetConfig):
         super(SeqLabelerNoTokenization, self).__init__(model_config=model_config, dataset_config=dataset_config)
