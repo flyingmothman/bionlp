@@ -9,16 +9,11 @@ from preamble import *
 from overrides import override
 
 
-def check_samples_for_meta_labels(samples: list[Sample]):
-    for sample in samples:
-        assert len(sample.annos.gold) == 1
-        assert sample.annos.gold[0].label_type in ['correct', 'incorrect']
-
-def get_gold_meta_labels(samples: list[Sample], type_to_idx: dict[str, int]):
-    return [type_to_idx[sample.annos.gold[0].label_type] 
-            for sample in samples]
-
 class MetaDefault(ModelClaC):
+    """
+    The base(basic) meta model that doesn't support special markers; lIt is just 
+    a simple binary classification model.
+    """
     def __init__(self, all_types: list[str], model_config: ModelConfig, dataset_config: DatasetConfig):
         super(MetaDefault, self).__init__(model_config, dataset_config)
         assert set(all_types) == set(['correct', 'incorrect'])
@@ -86,6 +81,10 @@ class MetaDefault(ModelClaC):
 
 
 class MetaDefaultSpecialTokens(MetaDefault):
+    """
+    Identical to the basic model except that it can work with
+    special beginning and ending markers <e> and </e> respectively.
+    """
     def __init__(self, all_types: list[str], model_config: ModelConfig, dataset_config: DatasetConfig):
         super(MetaDefaultSpecialTokens, self).__init__(
                 all_types=all_types,
@@ -115,6 +114,10 @@ class MetaDefaultSpecialTokens(MetaDefault):
 
 
 class MetaSpecialWeightedLoss(MetaDefaultSpecialTokens):
+    """
+    This model additionally supports adding weights to the
+    CrossEntropyLoss for dealing with unbalanced classes.
+    """
     def __init__(self, 
                  all_types: list[str],
                  model_config: ModelConfig,
@@ -132,6 +135,12 @@ class MetaSpecialWeightedLoss(MetaDefaultSpecialTokens):
         self.loss_function = nn.CrossEntropyLoss(weight=self.class_weights_tensor)
 
 
+def check_samples_for_meta_labels(samples: list[Sample]):
+    for sample in samples:
+        assert len(sample.annos.gold) == 1
+        assert sample.annos.gold[0].label_type in ['correct', 'incorrect']
 
-
+def get_gold_meta_labels(samples: list[Sample], type_to_idx: dict[str, int]):
+    return [type_to_idx[sample.annos.gold[0].label_type] 
+            for sample in samples]
 
