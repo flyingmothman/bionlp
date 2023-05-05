@@ -1,4 +1,4 @@
-This repo will **very soon** contain all the code used in the paper "Comparing and combining some popular NER approaches on Biomedical
+This repo will **very soon** contain all the code -- I am working on this actively -- used in the paper "Comparing and combining some popular NER approaches on Biomedical
 task".  
 
 The code for all models is in `./models`.  
