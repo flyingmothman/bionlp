@@ -1,11 +1,14 @@
 import torch
 from torch import nn
+from transformers.models.auto.modeling_auto import AutoModel
+from transformers.models.auto.tokenization_auto import AutoTokenizer
 from utils.model import ModelBase
-
+from utils.structs import DatasetConfig, ModelConfig, Sample
+import transformers
 
 class SeqDefault(ModelBase):
-    def __init__(self, all_types: List[str], model_config: ModelConfig, dataset_config: DatasetConfig):
-        super(SeqLabelerNoTokenization, self).__init__(model_config=model_config, dataset_config=dataset_config)
+    def __init__(self, all_types: list[str], model_config: ModelConfig, dataset_config: DatasetConfig):
+        super().__init__(model_config=model_config, dataset_config=dataset_config)
         self.bert_model = AutoModel.from_pretrained(model_config.pretrained_model_name)
         self.bert_tokenizer = AutoTokenizer.from_pretrained(model_config.pretrained_model_name)
         self.input_dim = model_config.pretrained_model_output_dim
@@ -17,7 +20,7 @@ class SeqDefault(ModelBase):
         self.loss_function = nn.CrossEntropyLoss()
 
 
-    def get_bert_encoding_for_batch(self, samples: List[Sample],
+    def get_bert_encoding_for_batch(self, samples: list[Sample],
                                     model_config: ModelConfig) -> transformers.BatchEncoding:
         batch_of_sample_texts = [sample.text for sample in samples]
         bert_encoding_for_batch = self.bert_tokenizer(batch_of_sample_texts,

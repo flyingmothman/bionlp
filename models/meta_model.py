@@ -1,12 +1,10 @@
 from transformers.models.auto.modeling_auto import AutoModel
 from transformers.models.auto.tokenization_auto import AutoTokenizer
 from utils.model import ClassificationPredictions, SeqLabelPredictions, get_bert_encoding_for_batch
-from utils.config import ModelConfig, DatasetConfig
 import torch
 import torch.nn as nn
-from structs import Sample
-from preamble import *
-from overrides import override
+from utils.structs import Sample, ModelConfig, DatasetConfig
+from overrides import overrides
 from utils.model import ModelBase
 
 
@@ -101,7 +99,7 @@ class MetaDefaultSpecialTokens(MetaDefault):
 
         self.bert_model.resize_token_embeddings(len(self.bert_tokenizer))
 
-    @override
+    @overrides
     def get_bert_encoding(self, samples: list[Sample]):
         bert_encoding =  get_bert_encoding_for_batch(
                 samples=samples,
