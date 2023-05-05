@@ -1,8 +1,9 @@
 import torch
 from torch import nn
+from utils.model import ModelBase
 
 
-class SeqDefault(ModelClaC):
+class SeqDefault(ModelBase):
     def __init__(self, all_types: List[str], model_config: ModelConfig, dataset_config: DatasetConfig):
         super(SeqLabelerNoTokenization, self).__init__(model_config=model_config, dataset_config=dataset_config)
         self.bert_model = AutoModel.from_pretrained(model_config.pretrained_model_name)

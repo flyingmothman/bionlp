@@ -1,15 +1,16 @@
 from transformers.models.auto.modeling_auto import AutoModel
 from transformers.models.auto.tokenization_auto import AutoTokenizer
-from utils.model import ClassificationPredictions, ModelClaC, SeqLabelPredictions, get_bert_encoding_for_batch
+from utils.model import ClassificationPredictions, SeqLabelPredictions, get_bert_encoding_for_batch
 from utils.config import ModelConfig, DatasetConfig
 import torch
 import torch.nn as nn
 from structs import Sample
 from preamble import *
 from overrides import override
+from utils.model import ModelBase
 
 
-class MetaDefault(ModelClaC):
+class MetaDefault(ModelBase):
     """
     The base(basic) meta model that doesn't support special markers; lIt is just 
     a simple binary classification model.

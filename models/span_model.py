@@ -6,7 +6,7 @@ import util
 from structs import Anno, Sample
 from transformers.tokenization_utils_base import BatchEncoding
 from utils.config import ModelConfig, DatasetConfig
-from utils.model import SeqLabelPredictions, ModelClaC
+from utils.model import ModelBase, SeqLabelPredictions 
 import torch.nn as nn
 from preamble import *
 from utils.model import PositionalEncodingOriginal, get_bert_embeddings_for_batch
@@ -43,7 +43,7 @@ def get_annos_token_level(samples: List[Sample], batch_encoding: BatchEncoding) 
     return ret
 
 
-class SpanDefault(ModelClaC):
+class SpanDefault(ModelBase):
     def __init__(self, all_types: List[str], model_config: ModelConfig, dataset_config: DatasetConfig):
         super(SpanDefault, self).__init__(model_config, dataset_config)
         self.bert_model = AutoModel.from_pretrained(model_config.pretrained_model_name)
