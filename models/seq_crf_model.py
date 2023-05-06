@@ -7,7 +7,7 @@ from flair.data import Dictionary
 import torch.nn as nn
 import torch
 import train_util
-from preamble import *
+from utils.universal import *
 import util
 from structs import Annotation, Sample
 from utils.model import SeqLabelPredictions
