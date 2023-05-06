@@ -1,19 +1,16 @@
-from models.all_models import SeqLabelerNoTokenization
-from utils.config import DatasetConfig, ModelConfig
+from models.seq_model import SeqDefault
 from typing import List
 from flair.models.sequence_tagger_utils.crf import CRF
 from flair.models.sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
 from flair.data import Dictionary
 import torch.nn as nn
 import torch
-import train_util
-from utils.universal import *
-import util
-from structs import Annotation, Sample
+from utils.structs import Annotation, Sample, DatasetConfig, ModelConfig
 from utils.model import SeqLabelPredictions
+from utils.universal import device
 
 
-class SeqLabelerDefaultCRF(SeqLabelerNoTokenization):
+class SeqLabelerCRF(SeqDefault):
     def __init__(self, all_types: List[str], model_config: ModelConfig, dataset_config: DatasetConfig): 
         super().__init__(all_types=all_types, model_config=model_config, dataset_config=dataset_config)
         self.flair_dictionary = self.get_flair_label_dictionary()
