@@ -8,6 +8,7 @@ import torch
 from utils.structs import Annotation, Sample, DatasetConfig, ModelConfig
 from utils.model import SeqLabelPredictions
 from utils.universal import device
+from utils.training import get_bio_labels_for_bert_tokens_batch
 
 
 class SeqLabelerCRF(SeqDefault):
@@ -56,7 +57,7 @@ class SeqLabelerCRF(SeqDefault):
         linear_logits = self.linear(bert_embeddings_batch)
         crf_logits = self.crf(linear_logits)
 
-        gold_labels_batch = train_util.get_bio_labels_for_bert_tokens_batch(
+        gold_labels_batch = get_bio_labels_for_bert_tokens_batch(
             self.get_token_annos_batch(bert_encoding_for_batch, samples),
             [sample.annos.gold for sample in samples]
         )
