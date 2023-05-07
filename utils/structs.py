@@ -82,3 +82,48 @@ class ExperimentConfig:
     optimizer: str = 'Adam'
     num_epochs: int = 20
     evaluation_type: EvaluationType = EvaluationType.f1
+
+
+class BioTag(Enum):
+    out = 0
+    begin = 1
+    inside = 2
+
+
+OUTSIDE_LABEL_STRING = 'o'
+
+class Label:
+    def __init__(self, label_type, bio_tag):
+        self.label_type = label_type
+        self.bio_tag = bio_tag
+
+    def __key(self):
+        return self.label_type, self.bio_tag
+
+    def __str__(self):
+        if self.bio_tag == BioTag.begin:
+            return self.label_type + '-BEGIN'
+        elif self.bio_tag == BioTag.inside:
+            return self.label_type + '-INSIDE'
+        else:
+            return OUTSIDE_LABEL_STRING
+
+    def __repr__(self) -> str:
+        if self.bio_tag == BioTag.begin:
+            return self.label_type + '-BEGIN'
+        elif self.bio_tag == BioTag.inside:
+            return self.label_type + '-INSIDE'
+        else:
+            return OUTSIDE_LABEL_STRING
+
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __eq__(self, other):
+        if isinstance(other, Label):
+            return (other.label_type == self.label_type) and (other.bio_tag == self.bio_tag)
+        raise NotImplementedError()
+
+    @staticmethod
+    def get_outside_label():
+        return Label(OUTSIDE_LABEL_STRING, BioTag.out)

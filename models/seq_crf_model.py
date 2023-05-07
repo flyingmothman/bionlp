@@ -8,7 +8,7 @@ import torch
 from utils.structs import Annotation, Sample, DatasetConfig, ModelConfig
 from utils.model import SeqLabelPredictions
 from utils.universal import device
-from utils.training import get_bio_labels_for_bert_tokens_batch
+from utils.training import get_bio_labels_for_bert_tokens_batch, get_annos_from_bio_labels
 
 
 class SeqLabelerCRF(SeqDefault):
@@ -88,7 +88,7 @@ class SeqLabelerCRF(SeqDefault):
         predicted_labels_batch = self.get_predicted_labels(predictions)
 
         predicted_annos_batch: List[List[Annotation]] = [
-            util.get_annos_from_bio_labels(
+            get_annos_from_bio_labels(
                 prediction_labels=predicted_labels,
                 batch_encoding=bert_encoding_for_batch,
                 batch_idx=batch_idx,

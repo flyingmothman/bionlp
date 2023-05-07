@@ -1,6 +1,6 @@
-import transformers
 import torch
-from utils.structs import ExperimentConfig, Annotation
+from transformers.optimization import Adafactor
+from utils.structs import ExperimentConfig, Annotation, Label, BioTag
 from utils.universal import Option
 
 
@@ -13,7 +13,7 @@ def get_optimizer(model, experiment_config: ExperimentConfig):
     elif experiment_config.optimizer == 'AdamW':
         return torch.optim.AdamW(model.parameters(), experiment_config.model_config.learning_rate)
     elif experiment_config.optimizer == 'Adafactor':
-        return transformers.Adafactor(
+        return Adafactor(
             model.parameters(),
             lr=experiment_config.model_config.learning_rate,
             relative_step=False,
@@ -62,3 +62,54 @@ def get_labels_bio_new(token_anno_list: list[Option[Annotation]], gold_annos: li
                     assert gold_anno.begin_offset <= curr_token_anno.get_value().begin_offset < gold_anno.end_offset
                     new_labels[i] = Label(gold_anno.label_type, BioTag.inside)
     return new_labels
+
+
+
+def get_annos_from_bio_labels(
+        prediction_labels: list[Label],
+        batch_encoding,
+        batch_idx: int,
+        sample_text: str,
+) -> list[Annotation]:
+    spans_token_idx = get_spans_from_bio_labels_token_indices(prediction_labels)
+    ret = []
+    for span in spans_token_idx:
+        start_char_span = batch_encoding.token_to_chars(batch_or_token_index=batch_idx, token_index=span[0])
+        end_char_span = batch_encoding.token_to_chars(batch_or_token_index=batch_idx, token_index=span[1])
+        if (start_char_span is not None) and (end_char_span is not None):
+            ret.append(
+                Annotation(
+                    begin_offset=start_char_span.start,
+                    end_offset=end_char_span.end,
+                    label_type=span[2],
+                    extraction=sample_text[start_char_span.start: end_char_span.end]
+                )
+            )
+    return ret
+
+
+def get_spans_from_bio_labels_token_indices(predictions_sub: list[Label]) -> list[tuple]:
+    span_list = []
+    start = None
+    start_label = None
+    for i, label in enumerate(predictions_sub):
+        if label.bio_tag == BioTag.out:
+            if start is not None:
+                span_list.append((start, i - 1, start_label))
+                start = None
+                start_label = None
+        elif label.bio_tag == BioTag.begin:
+            if start is not None:
+                span_list.append((start, i - 1, start_label))
+            start = i
+            start_label = label.label_type
+        elif label.bio_tag == BioTag.inside:
+            if (start is not None) and (start_label != label.label_type):
+                span_list.append((start, i - 1, start_label))
+                start = None
+                start_label = None
+        else:
+            raise Exception(f'Illegal label {label}')
+    if start is not None:
+        span_list.append((start, len(predictions_sub) - 1, start_label))
+    return span_list
