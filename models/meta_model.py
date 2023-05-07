@@ -1,11 +1,13 @@
 from transformers.models.auto.modeling_auto import AutoModel
 from transformers.models.auto.tokenization_auto import AutoTokenizer
-from utils.model import ClassificationPredictions, SeqLabelPredictions, get_bert_encoding_for_batch
+from utils.model import ClassificationPredictions, SeqLabelPredictions
 import torch
 import torch.nn as nn
 from utils.structs import Sample, ModelConfig, DatasetConfig
 from overrides import overrides
 from utils.model import ModelBase
+from utils.training import get_bert_encoding_for_batch
+from utils.universal import tensor_shape, device
 
 
 class MetaDefault(ModelBase):

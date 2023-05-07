@@ -1,7 +1,8 @@
 import torch
 from transformers.optimization import Adafactor
-from utils.structs import ExperimentConfig, Annotation, Label, BioTag, DatasetConfig
-from utils.universal import Option
+from transformers.tokenization_utils_base import BatchEncoding
+from utils.structs import ExperimentConfig, Annotation, Label, BioTag, DatasetConfig, Sample, ModelConfig
+from utils.universal import Option, device
 
 
 def get_optimizer(model, experiment_config: ExperimentConfig):
@@ -182,3 +183,18 @@ def get_bio_label_idx_dicts(all_types: list[str], dataset_config: DatasetConfig)
     assert len(label_to_idx_dict) == len(idx_to_label_dict)
     assert len(label_to_idx_dict) == dataset_config.num_types * 2 + 1
     return label_to_idx_dict, idx_to_label_dict
+
+
+
+def get_bert_encoding_for_batch(samples: list[Sample],
+                                model_config: ModelConfig,
+                                bert_tokenizer) -> BatchEncoding:
+    batch_of_sample_texts = [sample.text for sample in samples]
+    bert_encoding_for_batch = bert_tokenizer(batch_of_sample_texts,
+                                             return_tensors="pt",
+                                             is_split_into_words=False,
+                                             add_special_tokens=model_config.use_special_bert_tokens,
+                                             truncation=True,
+                                             padding=True,
+                                             max_length=512).to(device)
+    return bert_encoding_for_batch
