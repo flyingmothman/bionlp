@@ -1,49 +1,16 @@
 import torch
-import transformers
-from transformers import AutoModel, AutoTokenizer
 from allennlp.modules.span_extractors.endpoint_span_extractor import EndpointSpanExtractor
-import util
-from utils.structs import Annotation, Sample
-from transformers.tokenization_utils_base import BatchEncoding
-from utils.config import ModelConfig, DatasetConfig
+from transformers.models.auto.modeling_auto import AutoModel
+from transformers.models.auto.tokenization_auto import AutoTokenizer
+from utils.structs import Annotation, Sample, ModelConfig, DatasetConfig
+from utils.universal import device
 from utils.model import ModelBase, SeqLabelPredictions 
+from utils.training import enumerate_spans
+from transformers.tokenization_utils_base import BatchEncoding
 import torch.nn as nn
-from preamble import *
-
-
-
-
-def get_annos_token_level(samples: List[Sample], batch_encoding: BatchEncoding) -> list[list[Annotation]]:
-    ret = []
-    for batch_idx, sample in enumerate(samples):
-        token_level_annos_for_sample = []
-        for gold_anno in sample.annos.gold:
-            start_token_idx = batch_encoding.char_to_token(batch_or_char_index=batch_idx,
-                                                           char_index=gold_anno.begin_offset)
-            end_token_idx = batch_encoding.char_to_token(batch_or_char_index=batch_idx,
-                                                         char_index=(gold_anno.end_offset - 1))
-            if (start_token_idx is not None) and (end_token_idx is not None):
-                token_level_annos_for_sample.append(
-                    Annotation(
-                        begin_offset=start_token_idx,
-                        end_offset=end_token_idx + 1,
-                        label_type=gold_anno.label_type,
-                        extraction=gold_anno.extraction,
-                        features=gold_anno.features
-                    )
-                )
-            else:
-                print(f"WARN: No char_index to token_index mapping:")
-                print(f"DEBUG: SampleId: {sample.id}")
-                print(f"DEBUG: Annotation: {gold_anno}")
-                # print(f"DEBUG: Sample id: {sample.id}")
-                # print(f"DEBUG: Sample text: {sample.text}")
-        ret.append(token_level_annos_for_sample)
-    return ret
-
 
 class SpanDefault(ModelBase):
-    def __init__(self, all_types: List[str], model_config: ModelConfig, dataset_config: DatasetConfig):
+    def __init__(self, all_types: list[str], model_config: ModelConfig, dataset_config: DatasetConfig):
         super(SpanDefault, self).__init__(model_config, dataset_config)
         self.bert_model = AutoModel.from_pretrained(model_config.pretrained_model_name)
         self.bert_tokenizer = AutoTokenizer.from_pretrained(model_config.pretrained_model_name)
@@ -66,8 +33,8 @@ class SpanDefault(ModelBase):
     def get_classifier(self):
         return nn.Linear(self.input_dim * 2, self.num_class)
 
-    def get_bert_encoding_for_batch(self, samples: List[Sample], model_config: ModelConfig) \
-            -> transformers.BatchEncoding:
+    def get_bert_encoding_for_batch(self, samples: list[Sample], model_config: ModelConfig) \
+            -> BatchEncoding:
         batch_of_sample_texts = [sample.text for sample in samples]
         bert_encoding_for_batch = self.bert_tokenizer(batch_of_sample_texts,
                                                       return_tensors="pt",
@@ -88,7 +55,7 @@ class SpanDefault(ModelBase):
 
     def forward(
             self,
-            samples: List[Sample],
+            samples: list[Sample],
             # collect: List
     ) -> tuple[torch.Tensor, SeqLabelPredictions]:
         batch_encoding = self.get_bert_encoding_for_batch(samples, self.model_config)
@@ -103,7 +70,7 @@ class SpanDefault(ModelBase):
         # enumerate all possible spans
         # spans are inclusive
         all_possible_spans_list_batch = [
-            util.enumerate_spans(batch_encoding.word_ids(batch_index=batch_idx), max_span_width=self.max_span_width)
+            enumerate_spans(batch_encoding.word_ids(batch_index=batch_idx), max_span_width=self.max_span_width)
             for batch_idx in range(len(samples))
         ]
         # SHAPE: (batch_size, num_spans)
@@ -144,8 +111,8 @@ class SpanDefault(ModelBase):
             predicted_all_possible_spans_logits_batch,
             all_possible_spans_list_batch,
             batch_encoding: BatchEncoding,
-            samples: List[Sample]
-    ) -> List[List[Annotation]]:
+            samples: list[Sample]
+    ) -> list[list[Annotation]]:
         ret = []
         # SHAPE: (batch_size, num_spans)
         pred_all_possible_spans_type_indices_list_batch = torch \
@@ -201,8 +168,8 @@ class SpanDefault(ModelBase):
 
     def _label_all_possible_spans_batch(
             self,
-            all_possible_spans_list_batch: List[List[tuple]],
-            sub_token_level_annos_batch: List[List[Annotation]]
+            all_possible_spans_list_batch: list[list[tuple]],
+            sub_token_level_annos_batch: list[list[Annotation]]
     ):
         assert len(all_possible_spans_list_batch) == len(sub_token_level_annos_batch)
         ret = []
@@ -211,3 +178,34 @@ class SpanDefault(ModelBase):
             ret.append(self._label_all_possible_spans(all_possible_spans_list, sub_token_level_annos))
         assert len(ret) == len(all_possible_spans_list_batch)
         return ret
+
+
+
+
+def get_annos_token_level(samples: list[Sample], batch_encoding: BatchEncoding) -> list[list[Annotation]]:
+    ret = []
+    for batch_idx, sample in enumerate(samples):
+        token_level_annos_for_sample = []
+        for gold_anno in sample.annos.gold:
+            start_token_idx = batch_encoding.char_to_token(batch_or_char_index=batch_idx,
+                                                           char_index=gold_anno.begin_offset)
+            end_token_idx = batch_encoding.char_to_token(batch_or_char_index=batch_idx,
+                                                         char_index=(gold_anno.end_offset - 1))
+            if (start_token_idx is not None) and (end_token_idx is not None):
+                token_level_annos_for_sample.append(
+                    Annotation(
+                        begin_offset=start_token_idx,
+                        end_offset=end_token_idx + 1,
+                        label_type=gold_anno.label_type,
+                        extraction=gold_anno.extraction,
+                        features=gold_anno.features
+                    )
+                )
+            else:
+                print(f"WARN: No char_index to token_index mapping:")
+                print(f"DEBUG: SampleId: {sample.id}")
+                print(f"DEBUG: Annotation: {gold_anno}")
+                # print(f"DEBUG: Sample id: {sample.id}")
+                # print(f"DEBUG: Sample text: {sample.text}")
+        ret.append(token_level_annos_for_sample)
+    return ret
