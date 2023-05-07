@@ -1,6 +1,6 @@
 import torch
 from transformers.optimization import Adafactor
-from utils.structs import ExperimentConfig, Annotation, Label, BioTag
+from utils.structs import ExperimentConfig, Annotation, Label, BioTag, DatasetConfig
 from utils.universal import Option
 
 
@@ -162,3 +162,23 @@ def enumerate_spans(sentence: list,
             end = offset + end_index
             spans.append((start, end))
     return spans
+
+
+def get_bio_label_idx_dicts(all_types: list[str], dataset_config: DatasetConfig) -> tuple[dict[Label, int], dict[int, Label]]:
+    """
+    get dictionaries mapping from BIO labels to their corresponding indices.
+    """
+    label_to_idx_dict = {}
+    for type_string in all_types:
+        assert len(type_string), "Type cannot be an empty string"
+        label_to_idx_dict[Label(type_string, BioTag.begin)] = len(
+            label_to_idx_dict)
+        label_to_idx_dict[Label(type_string, BioTag.inside)] = len(
+            label_to_idx_dict)
+    label_to_idx_dict[Label.get_outside_label()] = len(label_to_idx_dict)
+    idx_to_label_dict = {}
+    for label in label_to_idx_dict:
+        idx_to_label_dict[label_to_idx_dict[label]] = label
+    assert len(label_to_idx_dict) == len(idx_to_label_dict)
+    assert len(label_to_idx_dict) == dataset_config.num_types * 2 + 1
+    return label_to_idx_dict, idx_to_label_dict
