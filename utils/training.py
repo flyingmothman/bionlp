@@ -1,13 +1,22 @@
 import torch
+import time
+import pandas as pd
+from gatenlp import Document
+from transformers.models.auto.tokenization_auto import AutoTokenizer
 from transformers.optimization import Adafactor
 from transformers.tokenization_utils_base import BatchEncoding
-from utils.structs import ExperimentConfig, Annotation, Label, BioTag, DatasetConfig, Sample, ModelConfig, TrainingArgs, AnnotationCollection
-from utils.universal import Option, device, blue, green
+from utils.structs import ExperimentConfig, Annotation, Label, BioTag,\
+        DatasetConfig, Sample, ModelConfig, TrainingArgs, AnnotationCollection,\
+        DatasetSplit, EvaluationType, SampleAnnotations, SampleId
+from utils.universal import Option, device, blue, green, red 
 from pathlib import Path
 import glob
 import argparse
 from pyfzf.pyfzf import FzfPrompt
 import csv
+import json
+from pydoc import locate
+
 
 def get_optimizer(model, experiment_config: ExperimentConfig):
     if experiment_config.optimizer == 'Ranger':
@@ -320,7 +329,7 @@ def get_test_samples(dataset_config: DatasetConfig) -> list[Sample]:
     return read_samples(dataset_config.test_samples_file_path)
 
 
-def read_samples(input_json_file_path: str) -> List[Sample]:
+def read_samples(input_json_file_path: str) -> list[Sample]:
     ret = []
     with open(input_json_file_path, 'r') as f:
         sample_list_raw = json.load(f)
@@ -338,3 +347,569 @@ def read_samples(input_json_file_path: str) -> List[Sample]:
             )
             ret.append(sample)
     return ret
+
+
+def get_annotations_from_raw_list(annotation_raw_list) -> list[Annotation]:
+    return [
+        Annotation(
+            begin_offset=annotation_raw['begin_offset'],
+            end_offset=annotation_raw['end_offset'],
+            label_type=annotation_raw['label_type'],
+            extraction=annotation_raw['extraction'],
+            features={}
+        )
+        for annotation_raw in annotation_raw_list
+    ]
+
+
+def has_external_features(samples: list[Sample]) -> bool:
+    for sample in samples:
+        if len(sample.annos.external):
+            return True
+    return False
+
+
+def check_external_features(samples: list[Sample], external_feature_type: str):
+    for sample in samples:
+        for anno in sample.annos.external:
+            if anno.label_type == external_feature_type:
+                return True
+    raise RuntimeError(f"External Feature {external_feature_type} not found in data")
+
+
+def ensure_no_sample_gets_truncated_by_bert(samples: list[Sample], dataset_config: DatasetConfig):
+    bert_tokenizer = get_bert_tokenizer()
+    # num_truncated = 0
+    for sample in samples:
+        num_tokens = len(bert_tokenizer(sample.text, truncation=True)['input_ids'])
+        if num_tokens == bert_tokenizer.model_max_length:
+            raise RuntimeError(f"WARN: In dataset {dataset_config.dataset_name}, the sample {sample.id} is being {red('Truncated')}")
+            # num_truncated += 1
+    # if num_truncated > 0:
+    #     print(blue(f"WARN: Total truncated samples : {num_truncated}"))
+
+
+def get_bert_tokenizer():
+    return AutoTokenizer.from_pretrained('bert-base-uncased')
+
+
+def prepare_model(model_config: ModelConfig, dataset_config: DatasetConfig):
+    all_types = get_all_types(dataset_config.types_file_path, dataset_config.num_types)
+    model_class = get_model_class(model_config=model_config)
+    return model_class(all_types, model_config=model_config, dataset_config=dataset_config).to(device)
+
+
+def get_model_class(model_config: ModelConfig) -> type:
+    model_class = None
+    for model_module_name in get_all_model_modules():
+        if model_class is None:
+            model_class = locate(f"models.{model_module_name}.{model_config.model_name}")
+        else:
+            if locate(f"models.{model_module_name}.{model_config.model_name}") is not None:
+                print(red(f"WARN: Found duplicate model class: {model_config.model_name}"))
+    assert model_class is not None, f"model class name {model_config.model_name} could not be found"
+    return model_class
+
+
+def get_all_model_modules():
+    all_module_paths = [file_path for file_path in glob.glob('./models/*.py') 
+                        if '__init__.py' not in file_path]
+    return [Path(module_path).stem for module_path in all_module_paths]
+
+
+def get_all_types(types_file_path: str, num_expected_types: int) -> list[str]:
+    ret = []
+    with open(types_file_path, 'r') as types_file:
+        for line in types_file:
+            type_name = line.strip()
+            if len(type_name):
+                ret.append(type_name)
+    assert len(ret) == num_expected_types, f"Expected {num_expected_types} num types, " \
+                                           f"but found {len(ret)} in types file."
+    return ret
+
+
+def check_label_types(train_samples: list[Sample], valid_samples: list[Sample], all_types: list[str]):
+    # verify that all label types in annotations are valid types
+    for sample in train_samples:
+        for anno in sample.annos.gold:
+            assert anno.label_type in all_types, f"anno label type {anno.label_type} not expected"
+    for sample in valid_samples:
+        for anno in sample.annos.gold:
+            assert anno.label_type in all_types, f"anno label type {anno.label_type} not expected"
+
+
+def get_batches(samples: list[Sample], batch_size: int) -> list[list[Sample]]:
+    return [
+        samples[batch_start_idx: batch_start_idx + batch_size]
+        for batch_start_idx in range(0, len(samples), batch_size)
+    ]
+
+
+def evaluate_validation_split(
+        logger,
+        model: torch.nn.Module,
+        validation_samples: list[Sample],
+        mistakes_folder_path: str,
+        predictions_folder_path: str,
+        error_visualization_folder_path: str,
+        validation_performance_file_path: str,
+        experiment_name: str,
+        dataset_config_name: str,
+        model_config_name: str,
+        epoch: int,
+        experiment_idx: int,
+        evaluation_type: EvaluationType
+):
+    evaluate_dataset_split(
+        logger=logger,
+        model=model,
+        samples=validation_samples,
+        mistakes_folder_path=mistakes_folder_path,
+        predictions_folder_path=predictions_folder_path,
+        error_visualization_folder_path=error_visualization_folder_path,
+        performance_file_path=validation_performance_file_path,
+        experiment_name=experiment_name,
+        dataset_config_name=dataset_config_name,
+        model_config_name=model_config_name,
+        epoch=epoch,
+        dataset_split=DatasetSplit.valid,
+        experiment_idx=experiment_idx,
+        evaluation_type=evaluation_type
+    )
+
+
+def evaluate_test_split(
+        logger,
+        model: torch.nn.Module,
+        test_samples: list[Sample],
+        mistakes_folder_path: str,
+        predictions_folder_path: str,
+        error_visualization_folder_path: str,
+        test_performance_file_path: str,
+        experiment_name: str,
+        dataset_config_name: str,
+        model_config_name: str,
+        epoch: int,
+        experiment_idx: int,
+        evaluation_type: EvaluationType
+):
+    evaluate_dataset_split(
+        logger=logger,
+        model=model,
+        samples=test_samples,
+        mistakes_folder_path=mistakes_folder_path,
+        predictions_folder_path=predictions_folder_path,
+        error_visualization_folder_path=error_visualization_folder_path,
+        performance_file_path=test_performance_file_path,
+        experiment_name=experiment_name,
+        dataset_config_name=dataset_config_name,
+        model_config_name=model_config_name,
+        epoch=epoch,
+        dataset_split=DatasetSplit.test,
+        experiment_idx=experiment_idx,
+        evaluation_type=evaluation_type
+    )
+
+
+def evaluate_dataset_split(
+        logger,
+        model: torch.nn.Module,
+        samples: list[Sample],
+        mistakes_folder_path: str,
+        predictions_folder_path: str,
+        error_visualization_folder_path: str,
+        performance_file_path: str,
+        experiment_name: str,
+        dataset_config_name: str,
+        model_config_name: str,
+        epoch: int,
+        dataset_split: DatasetSplit,
+        experiment_idx: int,
+        evaluation_type: EvaluationType
+):
+    logger.info(f"\n\nEvaluating {dataset_split.name} data")
+    model.eval()
+    output_file_prefix = f"{experiment_name}_{experiment_idx}_{dataset_config_name}_{model_config_name}_{dataset_split.name}" \
+                         f"_epoch_{epoch}"
+    mistakes_file_path = f"{mistakes_folder_path}/{output_file_prefix}_mistakes.tsv"
+    predictions_file_path = f"{predictions_folder_path}/{output_file_prefix}_predictions.tsv"
+
+    if evaluation_type == EvaluationType.f1:
+        evaluate_with_f1(
+                predictions_file_path=predictions_file_path,
+                mistakes_file_path=mistakes_file_path,
+                samples=samples,
+                model=model,
+                logger=logger,
+                performance_file_path=performance_file_path,
+                error_visualization_folder_path=error_visualization_folder_path,
+                output_file_prefix=output_file_prefix,
+                epoch=epoch,
+                experiment_name=experiment_name,
+                dataset_config_name=dataset_config_name,
+                model_config_name=model_config_name,
+                dataset_split=dataset_split
+                )
+    elif evaluation_type == EvaluationType.accuracy:
+        evaluate_with_accuracy(
+                predictions_file_path=predictions_file_path,
+                mistakes_file_path=mistakes_file_path,
+                samples=samples,
+                model=model,
+                logger=logger,
+                performance_file_path=performance_file_path,
+                error_visualization_folder_path=error_visualization_folder_path,
+                output_file_prefix=output_file_prefix,
+                epoch=epoch,
+                experiment_name=experiment_name,
+                dataset_config_name=dataset_config_name,
+                model_config_name=model_config_name,
+                dataset_split=dataset_split
+                )
+
+
+
+def evaluate_with_accuracy(
+        predictions_file_path: str,
+        mistakes_file_path: str,
+        samples: list[Sample],
+        model,
+        logger,
+        performance_file_path: str,
+        error_visualization_folder_path: str,
+        output_file_prefix: str,
+        epoch: int,
+        experiment_name: str,
+        dataset_config_name: str,
+        model_config_name: str,
+        dataset_split: DatasetSplit):
+
+    evaluation_start_time = time.time()
+
+    total_num_samples = len(samples)
+    num_correct_labels = 0
+
+    with open(predictions_file_path, 'w') as predictions_file, \
+            open(mistakes_file_path, 'w') as mistakes_file:
+        #  --- GET FILES READY FOR WRITING ---
+        predictions_file_writer = csv.writer(predictions_file, delimiter='\t')
+        mistakes_file_writer = csv.writer(mistakes_file, delimiter='\t')
+        prepare_file_headers_accuracy(mistakes_file_writer, predictions_file_writer)
+        with torch.no_grad():
+            # Eval Loop
+            for sample in samples:
+                loss, [predicted_anno] = model([sample])
+                assert len(sample.annos.gold) == 1
+                gold_anno = sample.annos.gold[0].label_type
+                assert gold_anno in ['correct', 'incorrect']
+                assert predicted_anno in ['correct', 'incorrect']
+                if gold_anno == predicted_anno:
+                    num_correct_labels += 1
+                # write sample predictions
+                store_prediction_accuracy(sample, predicted_anno, predictions_file_writer)
+    accuracy = num_correct_labels/total_num_samples
+    logger.info(blue(f"Accuracy: {accuracy}"))
+    visualize_errors_file_path = f"{error_visualization_folder_path}/{output_file_prefix}_visualize_errors.bdocjs"
+    store_performance_result_accuracy(
+            performance_file_path=performance_file_path,
+            epoch=epoch,
+            experiment_name=experiment_name,
+            dataset_config_name=dataset_config_name,
+            model_config_name=model_config_name,
+            dataset_split=dataset_split,
+            accuracy=accuracy
+    )
+
+    # upload files to dropbox
+    dropbox_util.upload_file(predictions_file_path)
+    # dropbox_util.upload_file(mistakes_file_path)
+    dropbox_util.upload_file(performance_file_path)
+
+    logger.info(green(f"Done evaluating {dataset_split.name} data.\n"
+                      f"Took {str(time.time() - evaluation_start_time)} secs."
+                      f"\n\n"))
+
+
+def prepare_file_headers_accuracy(mistakes_file_writer, predictions_file_writer):
+    predictions_file_header = ['sample_id', 'label']
+    predictions_file_writer.writerow(predictions_file_header)
+
+    mistakes_file_header = ['sample_id', 'label']
+    mistakes_file_writer.writerow(mistakes_file_header)
+
+
+
+def store_prediction_accuracy(
+        sample: Sample,
+        predicted_anno: str,
+        predictions_file_writer
+):
+    # write predictions
+    predictions_file_writer.writerow(
+        [sample.id, predicted_anno]
+    )
+
+
+def store_performance_result_accuracy(
+    performance_file_path,
+    accuracy,
+    epoch: int,
+    experiment_name: str,
+    dataset_config_name: str,
+    model_config_name: str,
+    dataset_split: DatasetSplit
+):
+    with open(performance_file_path, 'a') as performance_file:
+        mistakes_file_writer = csv.writer(performance_file)
+        mistakes_file_writer.writerow([experiment_name, dataset_config_name, dataset_split.name,
+                                       model_config_name, str(epoch),
+                                       str(accuracy)])
+
+def evaluate_with_f1(
+        predictions_file_path: str,
+        mistakes_file_path: str,
+        samples: list[Sample],
+        model,
+        logger,
+        performance_file_path: str,
+        error_visualization_folder_path: str,
+        output_file_prefix: str,
+        epoch: int,
+        experiment_name: str,
+        dataset_config_name: str,
+        model_config_name: str,
+        dataset_split: DatasetSplit):
+
+    evaluation_start_time = time.time()
+
+    with open(predictions_file_path, 'w') as predictions_file, \
+            open(mistakes_file_path, 'w') as mistakes_file:
+        #  --- GET FILES READY FOR WRITING ---
+        predictions_file_writer = csv.writer(predictions_file, delimiter='\t')
+        mistakes_file_writer = csv.writer(mistakes_file, delimiter='\t')
+        prepare_file_headers(mistakes_file_writer, predictions_file_writer)
+        with torch.no_grad():
+            num_TP_total = 0
+            num_FP_total = 0
+            num_FN_total = 0
+            # Eval Loop
+            for sample in samples:
+                loss, [predicted_annos] = model([sample])
+                gold_annos_set = set(
+                    [
+                        (gold_anno.begin_offset, gold_anno.end_offset, gold_anno.label_type)
+                        for gold_anno in sample.annos.gold
+                    ]
+                )
+                predicted_annos_set = set(
+                    [
+                        (predicted_anno.begin_offset, predicted_anno.end_offset, predicted_anno.label_type)
+                        for predicted_anno in predicted_annos
+                    ]
+                )
+
+                # calculate true positives, false positives, and false negatives
+                true_positives_sample = gold_annos_set.intersection(predicted_annos_set)
+                false_positives_sample = predicted_annos_set.difference(gold_annos_set)
+                false_negatives_sample = gold_annos_set.difference(predicted_annos_set)
+                num_TP = len(true_positives_sample)
+                num_TP_total += num_TP
+                num_FP = len(false_positives_sample)
+                num_FP_total += num_FP
+                num_FN = len(false_negatives_sample)
+                num_FN_total += num_FN
+
+                # write sample predictions
+                store_predictions(sample, predicted_annos, predictions_file_writer)
+                # write sample mistakes
+                store_mistakes(sample, false_positives_sample, false_negatives_sample,
+                               mistakes_file_writer)
+    micro_f1, micro_precision, micro_recall = f1(num_TP_total, num_FP_total, num_FN_total)
+    logger.info(blue(f"Micro f1 {micro_f1}, prec {micro_precision}, recall {micro_recall}"))
+    visualize_errors_file_path = f"{error_visualization_folder_path}/{output_file_prefix}_visualize_errors.bdocjs"
+    create_mistakes_visualization(mistakes_file_path, visualize_errors_file_path, samples)
+    store_performance_result(
+            performance_file_path=performance_file_path,
+            f1_score=micro_f1,
+            precision_score=micro_precision,
+            recall_score=micro_recall,
+            epoch=epoch,
+            experiment_name=experiment_name,
+            dataset_config_name=dataset_config_name,
+            model_config_name=model_config_name,
+            dataset_split=dataset_split
+    )
+
+    # upload files to dropbox
+    dropbox_util.upload_file(visualize_errors_file_path)
+    dropbox_util.upload_file(predictions_file_path)
+    # dropbox_util.upload_file(mistakes_file_path)
+    dropbox_util.upload_file(performance_file_path)
+
+    logger.info(green(f"Done evaluating {dataset_split.name} data.\n"
+                      f"Took {str(time.time() - evaluation_start_time)} secs."
+                      f"\n\n"))
+
+
+def prepare_file_headers(mistakes_file_writer, predictions_file_writer):
+    prepare_predictions_file_header(predictions_file_writer)
+
+    mistakes_file_header = ['sample_id', 'begin', 'end', 'type', 'extraction', 'mistake_type']
+    mistakes_file_writer.writerow(mistakes_file_header)
+
+
+def prepare_predictions_file_header(predictions_file_writer):
+    predictions_file_header = ['sample_id', 'begin', 'end', 'type', 'extraction']
+    predictions_file_writer.writerow(predictions_file_header)
+
+
+def store_predictions(
+    sample: Sample,
+    predicted_annos_valid: list[Annotation],
+    predictions_file_writer
+):
+    # write predictions
+    for anno in predicted_annos_valid:
+        predictions_file_writer.writerow(
+            [sample.id, str(anno.begin_offset), str(anno.end_offset), anno.label_type, anno.extraction]
+        )
+
+
+def store_mistakes(
+        sample: Sample,
+        false_positives,
+        false_negatives,
+        mistakes_file_writer
+):
+    # write false positive errors
+    for span in false_positives:
+        start_offset = span[0]
+        end_offset = span[1]
+        extraction = sample.text[start_offset: end_offset]
+        mistakes_file_writer.writerow(
+            [sample.id, str(start_offset), str(end_offset), span[2], extraction, 'FP']
+        )
+    # write false negative errors
+    for span in false_negatives:
+        start_offset = span[0]
+        end_offset = span[1]
+        extraction = sample.text[start_offset: end_offset]
+        mistakes_file_writer.writerow(
+            [sample.id, str(start_offset), str(end_offset), span[2], extraction, 'FN']
+        )
+
+
+def store_performance_result(
+    performance_file_path,
+    f1_score,
+    precision_score,
+    recall_score,
+    epoch: int,
+    experiment_name: str,
+    dataset_config_name: str,
+    model_config_name: str,
+    dataset_split: DatasetSplit
+):
+    with open(performance_file_path, 'a') as performance_file:
+        mistakes_file_writer = csv.writer(performance_file)
+        mistakes_file_writer.writerow([experiment_name, dataset_config_name, dataset_split.name,
+                                       model_config_name, str(epoch),
+                                       str((f1_score, precision_score, recall_score))])
+
+
+def create_mistakes_visualization(
+        mistakes_file_path: str,
+        mistakes_visualization_file_path: str,
+        validation_samples: list[Sample]
+) -> None:
+    """
+    Create a gate-visualization-file(.bdocjs format) that contains the mistakes
+    made by a trained model.
+
+    Args:
+        - mistakes_file_path: the file path containing the mistakes of the model
+        - gate_visualization_file_path: the gate visualization file path to create 
+    """
+    mistake_annos_dict = get_mistakes_annos(mistakes_file_path)
+    combined_annos_dict = {}
+    for sample in validation_samples:
+        gold_annos_list = sample.annos.gold
+        mistake_annos_list = mistake_annos_dict.get(sample.id, [])
+        combined_list = gold_annos_list + mistake_annos_list
+        for anno in combined_list:
+            anno.begin_offset = int(anno.begin_offset)
+            anno.end_offset = int(anno.end_offset)
+        combined_annos_dict[sample.id] = combined_list
+    sample_to_text_valid = {sample.id: sample.text for sample in validation_samples}
+    create_visualization_file(
+        mistakes_visualization_file_path,
+        combined_annos_dict,
+        sample_to_text_valid
+    )
+
+
+def get_mistakes_annos(mistakes_file_path) -> SampleAnnotations:
+    """
+    Get the annotations that correspond to mistakes for each sample using
+    the given mistakes file. 
+
+    Args:
+        mistakes_file_path: the file-path representing the file(a .tsv file)
+        that contains the mistakes made by a model.
+    """
+    df = pd.read_csv(mistakes_file_path, sep='\t')
+    sample_to_annos = {}
+    for _, row in df.iterrows():
+        annos_list = sample_to_annos.get(str(row['sample_id']), [])
+        annos_list.append(Annotation(int(row['begin']), int(row['end']), 
+                                     row['mistake_type'], row['extraction'],
+                                     {"type": row['type']}))
+        sample_to_annos[str(row['sample_id'])] = annos_list
+    return sample_to_annos
+
+
+
+def create_visualization_file(
+        visualization_file_path: str,
+        sample_to_annos: dict[SampleId, list[Annotation]],
+        sample_to_text: dict[SampleId, str]
+) -> None:
+    """
+    Create a .bdocjs formatted file which can me directly imported into gate developer.
+    We create the file using the given text and annotations.
+
+    Args:
+        visualization_file_path: str
+            the path of the visualization file we want to create
+        annos_dict: Dict[str, List[Anno]]
+            mapping from sample ids to annotations
+        sample_to_text:
+            mapping from sample ids to text
+    """
+    assert visualization_file_path.endswith(".bdocjs")
+    sample_offset = 0
+    document_text = ""
+    ofsetted_annos = []
+    for sample_id in sample_to_annos:
+        document_text += (sample_to_text[sample_id] + '\n\n\n\n')
+        ofsetted_annos.append(Annotation(sample_offset, len(
+            document_text), 'Sample', '', {"id": sample_id}))
+        for anno in sample_to_annos[sample_id]:
+            new_start_offset = anno.begin_offset + sample_offset
+            new_end_offset = anno.end_offset + sample_offset
+            gate_features = anno.features.copy()
+            gate_features['orig_start_offset'] = anno.begin_offset
+            gate_features['orig_end_offset'] = anno.end_offset
+            ofsetted_annos.append(Annotation(
+                new_start_offset, new_end_offset, anno.label_type, anno.extraction, gate_features))
+        sample_offset += (len(sample_to_text[sample_id]) + 4)  # account for added new lines
+    gate_document = Document(document_text)
+    default_ann_set = gate_document.annset()
+    for ofsetted_annotation in ofsetted_annos:
+        default_ann_set.add(
+            int(ofsetted_annotation.begin_offset),
+            int(ofsetted_annotation.end_offset),
+            ofsetted_annotation.label_type,
+            ofsetted_annotation.features)
+    gate_document.save(visualization_file_path)

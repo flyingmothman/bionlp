@@ -3,10 +3,15 @@ import time
 import numpy as np
 import logging  # configured in args.py
 import importlib
+from transformers.models.auto.tokenization_auto import AutoTokenizer
 from utils.structs import DatasetConfig, ModelConfig, ExperimentConfig, DatasetSplit
 from utils.training import check_config_integrity, parse_training_args, create_directory_structure \
         , create_performance_file_header, print_experiment_info, \
-        get_train_samples, get_valid_samples, get_test_samples
+        get_train_samples, get_valid_samples, get_test_samples, has_external_features, \
+        check_external_features, ensure_no_sample_gets_truncated_by_bert, prepare_model,\
+        get_optimizer, get_all_types, check_label_types, get_batches,\
+        evaluate_validation_split, evaluate_test_split
+from utils.universal import magenta, pretty_string, green
 from random import shuffle
 
 # Run some checks on our config files before starting
@@ -98,12 +103,12 @@ for experiment_idx, experiment_config in enumerate(experiments):
                 f"but got {len(test_samples)}"
  
     # Do some important checks on the data
-    if train_util.has_external_features(train_samples):
+    if has_external_features(train_samples):
         assert model_config.external_feature_type is not None, \
                 f"model is not expecting external features \n{model_config}"
-        train_util.check_external_features(
-                train_samples,
-                model_config.external_feature_type)
+        check_external_features(
+            train_samples,
+            model_config.external_feature_type)
 
     
 
@@ -121,19 +126,19 @@ for experiment_idx, experiment_config in enumerate(experiments):
     logger.info("finished reading data.")
 
     # Check samples
-    util.ensure_no_sample_gets_truncated_by_bert(train_samples, dataset_config)
+    ensure_no_sample_gets_truncated_by_bert(train_samples, dataset_config)
 
     # ------ MODEL INITIALISATION --------
     logger.info("Starting model initialization.")
     bert_tokenizer = AutoTokenizer.from_pretrained(model_config.pretrained_model_name)
-    model = train_util.prepare_model(model_config, dataset_config)
-    optimizer = train_util.get_optimizer(model, experiment_config)
-    all_types = util.get_all_types(dataset_config.types_file_path, dataset_config.num_types)
-    logger.debug(f"all types\n {util.p_string(list(all_types))}")
+    model = prepare_model(model_config, dataset_config)
+    optimizer = get_optimizer(model, experiment_config)
+    all_types = get_all_types(dataset_config.types_file_path, dataset_config.num_types)
+    logger.debug(f"all types\n {pretty_string(list(all_types))}")
     logger.info("Finished model initialization.")
 
     # verify that all label types in annotations are valid types
-    train_util.check_label_types(train_samples, valid_samples, all_types)
+    check_label_types(train_samples, valid_samples, all_types)
 
     for epoch in range(experiment_config.num_epochs):
         # Don't dry run for more than 2 epochs while testing
@@ -153,7 +158,7 @@ for experiment_idx, experiment_config in enumerate(experiments):
         shuffle(train_samples)
 
         # Training Loop
-        for train_batch in train_util.get_batches(samples=train_samples, batch_size=model_config.batch_size):
+        for train_batch in get_batches(samples=train_samples, batch_size=model_config.batch_size):
             optimizer.zero_grad()
             loss, predicted_annos = model(train_batch)
             loss.backward()
@@ -166,7 +171,7 @@ for experiment_idx, experiment_config in enumerate(experiments):
             f"seconds")
         logger.info(f"Done training epoch {epoch}")
 
-        train_util.evaluate_validation_split(
+        evaluate_validation_split(
             logger=logger,
             model=model,
             validation_samples=valid_samples,
@@ -185,7 +190,7 @@ for experiment_idx, experiment_config in enumerate(experiments):
         if IS_TESTING:
             if (((epoch + 1) % test_evaluation_frequency) == 0) \
                     or IS_DRY_RUN:
-                train_util.evaluate_test_split(
+                evaluate_test_split(
                     logger=logger,
                     model=model,
                     test_samples=test_samples,

@@ -2,38 +2,31 @@ from colorama import Fore, Style
 from enum import Enum
 from typing import Generic, TypeVar
 import torch
-
+import json
 
 def print_dict(some_dict):
     for key in some_dict:
         print(key, some_dict[key])
 
-
 def print_section():
     print("*" * 20)
-
 
 def print_green(some_string):
     print(Fore.GREEN)
     print(some_string)
     print(Style.RESET_ALL)
 
-
 def colorize_string(color: str, string) -> str:
     return color + string + Style.RESET_ALL
-
 
 def red(obj_to_color) -> str:
     return colorize_string(Fore.RED, str(obj_to_color))
 
-
 def green(obj_to_color) -> str:
     return colorize_string(Fore.GREEN, str(obj_to_color))
 
-
 def blue(obj_to_color) -> str:
     return colorize_string(Fore.BLUE, str(obj_to_color))
-
 
 def magenta(obj_to_color) -> str:
     return colorize_string(Fore.MAGENTA, str(obj_to_color))
@@ -77,3 +70,7 @@ class Option(Generic[T]):
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("using device", device)
+
+
+def pretty_string(obj) -> str:
+    return json.dumps(obj=obj, indent=4)

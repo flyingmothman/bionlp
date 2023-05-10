@@ -146,3 +146,7 @@ class TrainingArgs:
     is_dry_run_mode: bool
     experiment_name: str
     is_testing: bool
+
+
+SampleAnnotations = dict[str, list[Annotation]]
+SampleId = str
