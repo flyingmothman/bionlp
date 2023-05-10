@@ -1,9 +1,13 @@
 import torch
 from transformers.optimization import Adafactor
 from transformers.tokenization_utils_base import BatchEncoding
-from utils.structs import ExperimentConfig, Annotation, Label, BioTag, DatasetConfig, Sample, ModelConfig
-from utils.universal import Option, device
-
+from utils.structs import ExperimentConfig, Annotation, Label, BioTag, DatasetConfig, Sample, ModelConfig, TrainingArgs, AnnotationCollection
+from utils.universal import Option, device, blue, green
+from pathlib import Path
+import glob
+import argparse
+from pyfzf.pyfzf import FzfPrompt
+import csv
 
 def get_optimizer(model, experiment_config: ExperimentConfig):
     if experiment_config.optimizer == 'Ranger':
@@ -23,7 +27,6 @@ def get_optimizer(model, experiment_config: ExperimentConfig):
         )
     else:
         raise Exception(f"optimizer not found: {experiment_config.optimizer}")
-
 
 
 def get_bio_labels_for_bert_tokens_batch(
@@ -198,3 +201,140 @@ def get_bert_encoding_for_batch(samples: list[Sample],
                                              padding=True,
                                              max_length=512).to(device)
     return bert_encoding_for_batch
+
+
+
+def check_config_integrity():
+    """
+    Enforce config file name conventions so that it is easier to search for them.
+    """
+    all_experiment_file_paths = glob.glob('./experiments/*.py')
+    all_experiment_names = [Path(file_path).stem for file_path in all_experiment_file_paths]
+    # ignore the init file
+    all_experiment_names.remove('__init__')
+
+    assert all(experiment_name.startswith('experiment') for experiment_name in all_experiment_names), \
+        "experiment file names should start with 'experiment'"
+
+    all_dataset_config_file_paths = glob.glob('./configs/dataset_configs/*.yaml')
+    all_dataset_config_names = [Path(file_path).stem for file_path in all_dataset_config_file_paths]
+    assert all(dataset_config_name.startswith('dataset') for dataset_config_name in all_dataset_config_names), \
+        "dataset config file names should start with 'dataset'"
+
+    all_model_config_file_paths = glob.glob('./configs/model_configs/*.yaml')
+    all_model_config_names = [Path(file_path).stem for file_path in all_model_config_file_paths]
+    assert all(model_config_name.startswith('model') for model_config_name in all_model_config_names), \
+        "model config file names should start with 'model'"
+
+
+
+def parse_training_args() -> TrainingArgs:
+    parser = argparse.ArgumentParser(description='Train models and store their output for inspection.')
+    parser.add_argument('--production', action='store_true',
+                        help='start training on ALL data (10 samples only by default)')
+    parser.add_argument('--test', action='store_true', help="Evaluate on the test dataset.")
+    args = parser.parse_args()
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("using device:", device)
+
+    experiment_name = get_experiment_name_from_user()
+
+    return TrainingArgs(device, not args.production, experiment_name, args.test)
+
+
+
+def get_experiment_name_from_user() -> str:
+    all_experiment_file_paths = glob.glob('./experiments/*.py')
+    all_experiment_names = [Path(file_path).stem for file_path in all_experiment_file_paths]
+    # ignore the init file
+    all_experiment_names.remove('__init__')
+    assert all(experiment_name.startswith('experiment') for experiment_name in all_experiment_names)
+
+    # use fzf to select an experiment
+    fzf = FzfPrompt()
+    chosen_experiment = fzf.prompt(all_experiment_names)[0]
+    return chosen_experiment
+
+
+
+def create_directory_structure(folder_path: str):
+    """
+    Creates all the directories on the given `folder_path`.
+    Doesn't throw an error if directories already exist.
+    Args:
+        folder_path: the directory path to create.
+    """
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
+
+
+
+def create_performance_file_header(performance_file_path):
+    with open(performance_file_path, 'w') as performance_file:
+        mistakes_file_writer = csv.writer(performance_file)
+        mistakes_file_writer.writerow(['experiment_name', 'dataset_config_name', 'dataset_split', 'model_name', 'epoch', 'f1_score'])
+
+
+def print_experiment_info(
+    experiment_config: ExperimentConfig,
+    dataset_config: DatasetConfig,
+    model_config: ModelConfig,
+    experiment_name: str,
+    is_dry_run: bool,
+    is_testing: bool,
+    test_evaluation_frequency: int,
+) -> None:
+    """Print the configurations of the current run"""
+    print("\n\n------ EXPERIMENT OVERVIEW --------")
+    print(blue("Experiment:"), green(experiment_name))
+    print(blue("DRY_RUN_MODE:"), green(is_dry_run))
+    print(blue("Is Testing:"), green(is_testing))
+    print(blue("Dataset Config Name:"), green(dataset_config.dataset_config_name))
+    print(blue("Dataset:"), green(dataset_config.dataset_name))
+    print(blue("Model Config Name:"), green(model_config.model_config_name))
+    print(blue("Model Name:"), green(model_config.model_name))
+    print(blue("Batch_size"), green(model_config.batch_size))
+    print(blue("Testing Frequency"), green(test_evaluation_frequency))
+    print("----------------------------\n\n")
+    print("Experiment Config")
+    print(experiment_config)
+    print()
+    print("Model Config:")
+    print(model_config)
+    print()
+    print("Dataset Config:")
+    print(dataset_config)
+    print()
+
+
+
+def get_train_samples(dataset_config: DatasetConfig) -> list[Sample]:
+    return read_samples(dataset_config.train_samples_file_path)
+
+
+def get_valid_samples(dataset_config: DatasetConfig) -> list[Sample]:
+    return read_samples(dataset_config.valid_samples_file_path)
+
+
+def get_test_samples(dataset_config: DatasetConfig) -> list[Sample]:
+    return read_samples(dataset_config.test_samples_file_path)
+
+
+def read_samples(input_json_file_path: str) -> List[Sample]:
+    ret = []
+    with open(input_json_file_path, 'r') as f:
+        sample_list_raw = json.load(f)
+        assert type(sample_list_raw) == list
+        for sample_raw in sample_list_raw:
+            sample = Sample(
+                text=sample_raw['text'],
+                id=sample_raw['id'],
+                annos=AnnotationCollection(
+                    gold=get_annotations_from_raw_list(
+                        sample_raw["annos"]["gold"]),
+                    external=get_annotations_from_raw_list(
+                        sample_raw["annos"]["external"])
+                )
+            )
+            ret.append(sample)
+    return ret

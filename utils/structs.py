@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+import torch
 
 @dataclass
 class Annotation:
@@ -127,3 +128,21 @@ class Label:
     @staticmethod
     def get_outside_label():
         return Label(OUTSIDE_LABEL_STRING, BioTag.out)
+
+
+class DatasetSplit(Enum):
+    """
+    Represent the variety in splitting data.
+    """
+    train = 0
+    valid = 1
+    test = 2
+
+
+
+@dataclass
+class TrainingArgs:
+    device: torch.device
+    is_dry_run_mode: bool
+    experiment_name: str
+    is_testing: bool

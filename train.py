@@ -1,21 +1,19 @@
-import util
-import train_util
 import transformers
-from transformers import AutoTokenizer
 import time
 import numpy as np
 import logging  # configured in args.py
 import importlib
-from utils.config import DatasetConfig, ModelConfig, ExperimentConfig
+from utils.structs import DatasetConfig, ModelConfig, ExperimentConfig, DatasetSplit
+from utils.training import check_config_integrity, parse_training_args, create_directory_structure \
+        , create_performance_file_header, print_experiment_info, \
+        get_train_samples, get_valid_samples, get_test_samples
 from random import shuffle
-from structs import DatasetSplit
-from preamble import *
 
 # Run some checks on our config files before starting
-util.check_config_integrity()
+check_config_integrity()
 
 # Get config for training
-training_args = train_util.parse_training_args()
+training_args = parse_training_args()
 EXPERIMENT_NAME = training_args.experiment_name
 IS_DRY_RUN = training_args.is_dry_run_mode
 IS_TESTING = training_args.is_testing
@@ -44,18 +42,18 @@ models_folder_path = f'{training_results_folder_path}/models'
 performance_folder_path = f'{training_results_folder_path}/performance'
 test_predictions_folder_path = f'{training_results_folder_path}/test_predictions'
 
-util.create_directory_structure(mistakes_folder_path)
-util.create_directory_structure(error_visualization_folder_path)
-util.create_directory_structure(predictions_folder_path)
-util.create_directory_structure(models_folder_path)
-util.create_directory_structure(performance_folder_path)
-util.create_directory_structure(test_predictions_folder_path)
+create_directory_structure(mistakes_folder_path)
+create_directory_structure(error_visualization_folder_path)
+create_directory_structure(predictions_folder_path)
+create_directory_structure(models_folder_path)
+create_directory_structure(performance_folder_path)
+create_directory_structure(test_predictions_folder_path)
 
 validation_performance_file_path = f"{performance_folder_path}/performance_{EXPERIMENT_NAME}" \
                                    f"_{DatasetSplit.valid.name}.csv"
 test_performance_file_path = f"{performance_folder_path}/performance_{EXPERIMENT_NAME}_{DatasetSplit.test.name}.csv"
-train_util.create_performance_file_header(validation_performance_file_path)
-train_util.create_performance_file_header(test_performance_file_path)
+create_performance_file_header(validation_performance_file_path)
+create_performance_file_header(test_performance_file_path)
 
 dataset_config: DatasetConfig
 model_config: ModelConfig
@@ -67,7 +65,7 @@ for experiment_idx, experiment_config in enumerate(experiments):
     model_config = experiment_config.model_config
     test_evaluation_frequency = experiment_config.testing_frequency
 
-    train_util.print_experiment_info(
+    print_experiment_info(
         experiment_config=experiment_config,
         dataset_config=dataset_config,
         model_config=model_config,
@@ -83,18 +81,18 @@ for experiment_idx, experiment_config in enumerate(experiments):
     logger.info("Starting to read data.")
 
     
-    train_samples = train_util.get_train_samples(dataset_config)
+    train_samples = get_train_samples(dataset_config)
     assert len(train_samples) == experiment_config.dataset_config.expected_number_of_train_samples,\
             f"expected num train samples: {experiment_config.dataset_config.expected_number_of_train_samples}"\
             f"but got {len(train_samples)}"
 
-    valid_samples = train_util.get_valid_samples(dataset_config)
+    valid_samples = get_valid_samples(dataset_config)
     assert len(valid_samples) == experiment_config.dataset_config.expected_number_of_valid_samples,\
             f"expected num valid samples: {experiment_config.dataset_config.expected_number_of_valid_samples}"\
             f"but got {len(valid_samples)}"
 
     if IS_TESTING:
-        test_samples = train_util.get_test_samples(dataset_config)
+        test_samples = get_test_samples(dataset_config)
         assert len(test_samples) == experiment_config.dataset_config.expected_number_of_test_samples,\
                 f"expected num test samples: {experiment_config.dataset_config.expected_number_of_test_samples}"\
                 f"but got {len(test_samples)}"
