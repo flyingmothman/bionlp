@@ -118,7 +118,6 @@ class SeqDefault(ModelBase):
         # encoding helps manage tokens created by bert
         bert_encoding_for_batch = self.get_bert_encoding_for_batch(samples, self.model_config)
         # print("encoding new", bert_encoding_for_batch)
-        # collect.append(bert_encoding_for_batch)
         # SHAPE (batch_size, seq_len, bert_emb_len)
         bert_embeddings_batch = self.get_bert_embeddings_for_batch(bert_encoding_for_batch, samples=samples)
         predictions_logits_batch = self.classifier(bert_embeddings_batch)
@@ -130,7 +129,6 @@ class SeqDefault(ModelBase):
         assert len(gold_labels_batch) == len(samples)  # labels for each sample in batch
         assert len(gold_labels_batch[0]) == bert_embeddings_batch.shape[1]  # same num labels as tokens
         #  print("gold bio labels", gold_labels_batch[0])
-        #  collect.append(gold_labels_batch[0])
 
         gold_label_indices = [
             [self.label_to_idx[label] for label in gold_labels]
