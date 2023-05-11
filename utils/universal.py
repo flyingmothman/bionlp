@@ -3,6 +3,9 @@ from enum import Enum
 from typing import Generic, TypeVar
 import torch
 import json
+from utils.structs import Annotation
+import pandas as pd
+
 
 def print_dict(some_dict):
     for key in some_dict:
@@ -74,3 +77,20 @@ print("using device", device)
 
 def pretty_string(obj) -> str:
     return json.dumps(obj=obj, indent=4)
+
+
+def read_predictions_file(predictions_file_path) -> dict[str, list[Annotation]]:
+    df = pd.read_csv(predictions_file_path, sep='\t')
+    sample_to_annos = {}
+    for _, row in df.iterrows():
+        annos_list = sample_to_annos.get(str(row['sample_id']), [])
+        annos_list.append(
+            Annotation(
+                begin_offset=int(row['begin']),
+                end_offset=int(row['end']),
+                label_type=str(row['type']),
+                extraction=str(row['extraction']),
+            )
+        )
+        sample_to_annos[str(row['sample_id'])] = annos_list
+    return sample_to_annos

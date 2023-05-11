@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import NamedTuple
 from enum import Enum
 import torch
 
@@ -9,6 +10,13 @@ class Annotation:
     label_type: str
     extraction: str
     features: dict = field(default_factory=dict)
+
+
+class SampleAnnotation(NamedTuple):
+    sample_id: str
+    type_string: str
+    begin_offset: int
+    end_offset: int
 
 
 @dataclass
