@@ -1,0 +1,10 @@
+train_samples_file_path: ./preprocessed_data/living_ner_train_window_production_samples.json
+valid_samples_file_path: ./preprocessed_data/living_ner_valid_window_production_samples.json
+test_samples_file_path: ./preprocessed_data/living_ner_test_window_production_samples.json
+types_file_path: ./preprocessed_data/living_ner_test_window_production_types.txt
+num_types: 2
+dataset_name: living_ner
+dataset_config_name: living_ner_window
+expected_number_of_train_samples: 74609
+expected_number_of_valid_samples: 34223
+expected_number_of_test_samples: 34255

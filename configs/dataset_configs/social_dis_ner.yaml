@@ -1,0 +1,10 @@
+train_samples_file_path: ./preprocessed_data/social_dis_ner_train_default_production_samples.json
+valid_samples_file_path: ./preprocessed_data/social_dis_ner_valid_default_production_samples.json
+test_samples_file_path: ./preprocessed_data/social_dis_ner_test_default_production_samples.json
+types_file_path: ./preprocessed_data/social_dis_ner_train_vanilla_types.txt
+num_types: 1
+dataset_name: social_dis_ner
+dataset_config_name: social_dis_ner_vanilla
+expected_number_of_train_samples: 5000
+expected_number_of_valid_samples: 2500
+expected_number_of_test_samples: 23430
