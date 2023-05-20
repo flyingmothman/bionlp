@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from typing import NamedTuple
 from enum import Enum
 import torch
+from typing import Optional
+
 
 @dataclass
 class Annotation:
