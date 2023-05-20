@@ -171,3 +171,31 @@ def get_experiment_config(
             experiment_config = modifier.modify(experiment_config)
 
     return experiment_config
+
+
+def get_large_model_config(
+        model_config_name: str,
+        model_name: str,
+) -> ModelConfig:
+    return ModelConfig(
+        model_config_name=model_config_name,
+        model_name=model_name,
+        pretrained_model_name='xlm-roberta-large',
+        pretrained_model_output_dim=1024,
+        batch_size=4,
+        learning_rate=1e-5
+    )
+
+
+def get_large_model_config_bio(
+        model_config_name: str,
+        model_name: str,
+) -> ModelConfig:
+    return ModelConfig(
+        model_config_name=model_config_name,
+        model_name=model_name,
+        pretrained_model_name='michiyasunaga/BioLinkBERT-large',
+        pretrained_model_output_dim=1024,
+        batch_size=4,
+        learning_rate=1e-5
+    )
