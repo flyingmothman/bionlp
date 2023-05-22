@@ -2,7 +2,6 @@ import transformers
 import time
 import numpy as np
 import logging  # configured in args.py
-import importlib
 from transformers.models.auto.tokenization_auto import AutoTokenizer
 from utils.structs import DatasetConfig, ModelConfig, ExperimentConfig, DatasetSplit
 from utils.training import check_config_integrity, parse_training_args, create_directory_structure \
