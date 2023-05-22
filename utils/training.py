@@ -628,10 +628,10 @@ def evaluate_with_accuracy(
             accuracy=accuracy
     )
 
-    # upload files to dropbox
-    dropbox_util.upload_file(predictions_file_path)
-    # dropbox_util.upload_file(mistakes_file_path)
-    dropbox_util.upload_file(performance_file_path)
+    # # upload files to dropbox
+    # dropbox_util.upload_file(predictions_file_path)
+    # # dropbox_util.upload_file(mistakes_file_path)
+    # dropbox_util.upload_file(performance_file_path)
 
     logger.info(green(f"Done evaluating {dataset_split.name} data.\n"
                       f"Took {str(time.time() - evaluation_start_time)} secs."
@@ -749,10 +749,10 @@ def evaluate_with_f1(
     )
 
     # upload files to dropbox
-    dropbox_util.upload_file(visualize_errors_file_path)
-    dropbox_util.upload_file(predictions_file_path)
-    # dropbox_util.upload_file(mistakes_file_path)
-    dropbox_util.upload_file(performance_file_path)
+    # dropbox_util.upload_file(visualize_errors_file_path)
+    # dropbox_util.upload_file(predictions_file_path)
+    # # dropbox_util.upload_file(mistakes_file_path)
+    # dropbox_util.upload_file(performance_file_path)
 
     logger.info(green(f"Done evaluating {dataset_split.name} data.\n"
                       f"Took {str(time.time() - evaluation_start_time)} secs."
