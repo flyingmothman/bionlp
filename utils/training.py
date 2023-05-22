@@ -9,7 +9,7 @@ from transformers.tokenization_utils_base import BatchEncoding
 from utils.structs import ExperimentConfig, Annotation, Label, BioTag,\
         DatasetConfig, Sample, ModelConfig, TrainingArgs, AnnotationCollection,\
         DatasetSplit, EvaluationType, SampleAnnotations, SampleId
-from utils.universal import Option, device, blue, green, red 
+from utils.universal import Option, device, blue, green, red, f1
 from pathlib import Path
 import glob
 import argparse
@@ -215,8 +215,8 @@ def get_bert_encoding_for_batch(samples: list[Sample],
 
 def check_config_integrity():
     """
-      Enforce config file name conventions so that 
-      it is easier to search for them.
+    Enforce config file name conventions so that 
+    it is easier to search for them.
     """
     all_experiment_file_paths = glob.glob('./configs/experiment_configs/*.py')
     all_experiment_names = [Path(file_path).stem for file_path in all_experiment_file_paths]
