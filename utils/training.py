@@ -1,4 +1,5 @@
 import torch
+import importlib
 import time
 import pandas as pd
 from gatenlp import Document
@@ -212,29 +213,23 @@ def get_bert_encoding_for_batch(samples: list[Sample],
     return bert_encoding_for_batch
 
 
-
 def check_config_integrity():
     """
-    Enforce config file name conventions so that it is easier to search for them.
+      Enforce config file name conventions so that 
+      it is easier to search for them.
     """
-    all_experiment_file_paths = glob.glob('./experiments/*.py')
+    all_experiment_file_paths = glob.glob('./configs/experiment_configs/*.py')
     all_experiment_names = [Path(file_path).stem for file_path in all_experiment_file_paths]
     # ignore the init file
+    assert '__init__' in all_experiment_names, "__init__ file not found in experiment_config package"
+    print(all_experiment_names)
     all_experiment_names.remove('__init__')
 
-    assert all(experiment_name.startswith('experiment') for experiment_name in all_experiment_names), \
-        "experiment file names should start with 'experiment'"
-
-    all_dataset_config_file_paths = glob.glob('./configs/dataset_configs/*.yaml')
-    all_dataset_config_names = [Path(file_path).stem for file_path in all_dataset_config_file_paths]
-    assert all(dataset_config_name.startswith('dataset') for dataset_config_name in all_dataset_config_names), \
-        "dataset config file names should start with 'dataset'"
-
-    all_model_config_file_paths = glob.glob('./configs/model_configs/*.yaml')
+    all_model_config_file_paths = glob.glob('./configs/model_configs/*.py')
     all_model_config_names = [Path(file_path).stem for file_path in all_model_config_file_paths]
-    assert all(model_config_name.startswith('model') for model_config_name in all_model_config_names), \
-        "model config file names should start with 'model'"
-
+    # ignore the init file
+    assert '__init__' in all_model_config_names, "__init__ file not found in model_config package"
+    all_model_config_names.remove('__init__')
 
 
 def parse_training_args() -> TrainingArgs:
@@ -252,19 +247,31 @@ def parse_training_args() -> TrainingArgs:
     return TrainingArgs(device, not args.production, experiment_name, args.test)
 
 
-
-def get_experiment_name_from_user() -> str:
-    all_experiment_file_paths = glob.glob('./experiments/*.py')
+def get_all_experiment_names():
+    """
+    Get names of all available experiments.
+    """
+    all_experiment_file_paths = glob.glob('./configs/experiment_configs/*.py')
     all_experiment_names = [Path(file_path).stem for file_path in all_experiment_file_paths]
     # ignore the init file
+    assert '__init__' in all_experiment_names, "__init__ file not found in experiment_config package"
+    print(all_experiment_names)
     all_experiment_names.remove('__init__')
-    assert all(experiment_name.startswith('experiment') for experiment_name in all_experiment_names)
+    return all_experiment_names
 
+
+def get_experiments(experiment_name: str) -> list[ExperimentConfig]:
+    experiments_module = importlib.import_module(f"configs.experiment_configs.{experiment_name}")
+    experiments: list[ExperimentConfig] = experiments_module.experiments
+    return experiments
+
+
+def get_experiment_name_from_user() -> str:
+    all_experiment_names = get_all_experiment_names()
     # use fzf to select an experiment
     fzf = FzfPrompt()
     chosen_experiment = fzf.prompt(all_experiment_names)[0]
     return chosen_experiment
-
 
 
 def create_directory_structure(folder_path: str):

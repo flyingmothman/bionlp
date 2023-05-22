@@ -10,7 +10,7 @@ from utils.training import check_config_integrity, parse_training_args, create_d
         get_train_samples, get_valid_samples, get_test_samples, has_external_features, \
         check_external_features, ensure_no_sample_gets_truncated_by_bert, prepare_model,\
         get_optimizer, get_all_types, check_label_types, get_batches,\
-        evaluate_validation_split, evaluate_test_split
+        evaluate_validation_split, evaluate_test_split, get_experiments
 from utils.universal import magenta, pretty_string, green
 from random import shuffle
 
@@ -23,8 +23,8 @@ EXPERIMENT_NAME = training_args.experiment_name
 IS_DRY_RUN = training_args.is_dry_run_mode
 IS_TESTING = training_args.is_testing
 
-experiments_module = importlib.import_module(f"experiments.{EXPERIMENT_NAME}")
-experiments: list[ExperimentConfig] = experiments_module.experiments
+# Get the experiments we need to run.
+experiments = get_experiments(EXPERIMENT_NAME)
 
 # Setup logging
 root_logger = logging.getLogger()
@@ -63,8 +63,7 @@ create_performance_file_header(test_performance_file_path)
 dataset_config: DatasetConfig
 model_config: ModelConfig
 
-# How frequently we will evaluate on test data
-
+# Run each experiment
 for experiment_idx, experiment_config in enumerate(experiments):
     dataset_config = experiment_config.dataset_config
     model_config = experiment_config.model_config

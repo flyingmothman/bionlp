@@ -4,7 +4,7 @@ from utils.config import AdafactorModifier, AdamModifier, EpochsCustomModifier, 
 experiments = [
     # SPAN
     get_experiment_config(
-        model_config_module_name='model_span_large_default',
+        model_config_module_name='span_default',
         dataset_config_name='social_dis_ner_vanilla',
         modifiers=[
             Epochs20Modifier(),
@@ -14,7 +14,7 @@ experiments = [
         ]
     ),
     get_experiment_config(
-        model_config_module_name='model_span_large_default',
+        model_config_module_name='span_default',
         dataset_config_name='social_dis_ner_vanilla',
         modifiers=[
             Epochs20Modifier(),
@@ -27,7 +27,7 @@ experiments = [
 
     # SEQ
     get_experiment_config(
-        model_config_module_name='model_seq_large_default',
+        model_config_module_name='seq_default',
         dataset_config_name='social_dis_ner_vanilla',
         modifiers=[
             Epochs20Modifier(),
@@ -36,7 +36,7 @@ experiments = [
         ]
     ),
     get_experiment_config(
-        model_config_module_name='model_seq_large_default',
+        model_config_module_name='seq_default',
         dataset_config_name='social_dis_ner_vanilla',
         modifiers=[
             Epochs20Modifier(),
@@ -48,7 +48,7 @@ experiments = [
 
     # CRF
     get_experiment_config(
-        model_config_module_name='model_seq_large_crf',
+        model_config_module_name='seq_crf_default',
         dataset_config_name='social_dis_ner_vanilla',
         modifiers=[
             EpochsCustomModifier(num_epochs=25),
@@ -57,7 +57,7 @@ experiments = [
         ]
     ),
     get_experiment_config(
-        model_config_module_name='model_seq_large_crf',
+        model_config_module_name='seq_crf_default',
         dataset_config_name='social_dis_ner_vanilla',
         modifiers=[
             EpochsCustomModifier(num_epochs=25),
