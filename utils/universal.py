@@ -94,3 +94,23 @@ def read_predictions_file(predictions_file_path) -> dict[str, list[Annotation]]:
         )
         sample_to_annos[str(row['sample_id'])] = annos_list
     return sample_to_annos
+
+
+def f1(TP, FP, FN) -> tuple[float, float, float]:
+    """
+    Given true-positives, false-positives, and false-negatives
+    Returns the f1 score, precision, and recall
+    """
+    if (TP + FP) == 0:
+        precision = None
+    else:
+        precision = TP / (TP + FP)
+    if (FN + TP) == 0:
+        recall = None
+    else:
+        recall = TP / (FN + TP)
+    if (precision is None) or (recall is None) or ((precision + recall) == 0):
+        return 0, 0, 0
+    else:
+        f1_score = 2 * (precision * recall) / (precision + recall)
+        return f1_score, precision, recall
