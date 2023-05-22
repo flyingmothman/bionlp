@@ -5,7 +5,7 @@ from transformers.models.auto.tokenization_auto import AutoTokenizer
 from transformers.tokenization_utils_base import BatchEncoding, CharSpan
 from utils.model import ModelBase
 from utils.structs import DatasetConfig, ModelConfig, Sample, Annotation
-from utils.universal import Option, device
+from utils.universal import Option, device, OptionState
 from utils.training import get_bio_label_idx_dicts, get_bio_labels_for_bert_tokens_batch, get_annos_from_bio_labels
 from utils.model import SeqLabelPredictions
 
