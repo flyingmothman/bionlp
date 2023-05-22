@@ -7,7 +7,7 @@ Utility code is in `./utils`.
 Configurations for all experiments, models, and datasets is in `./configs`.  
 
 ## Preprocessed data
-Run script `./download_preprocessed_data.sh` to download all preprocessed data in `./preprocessed_data`.  
+Run script `./download_preprocessed_data.sh` to download all preprocessed data into `./preprocessed_data`.  
 
 ## Training
 `train.py` is the main script for training the models.
