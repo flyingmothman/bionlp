@@ -13,17 +13,6 @@ experiments = [
             AdafactorModifier()
         ]
     ),
-    get_experiment_config(
-        model_config_module_name='span_default',
-        dataset_config_name='social_dis_ner_vanilla',
-        modifiers=[
-            Epochs20Modifier(),
-            SmallerSpanWidthModifier(),
-            TestEveryEpochModifier(),
-            AdamModifier()
-        ]
-    ),
-
 
     # SEQ
     get_experiment_config(
@@ -35,16 +24,6 @@ experiments = [
             AdafactorModifier()
         ]
     ),
-    get_experiment_config(
-        model_config_module_name='seq_default',
-        dataset_config_name='social_dis_ner_vanilla',
-        modifiers=[
-            Epochs20Modifier(),
-            TestEveryEpochModifier(),
-            AdamModifier()
-        ]
-    ),
-
 
     # CRF
     get_experiment_config(
@@ -54,15 +33,6 @@ experiments = [
             EpochsCustomModifier(num_epochs=25),
             TestEveryEpochModifier(),
             AdafactorModifier()
-        ]
-    ),
-    get_experiment_config(
-        model_config_module_name='seq_crf_default',
-        dataset_config_name='social_dis_ner_vanilla',
-        modifiers=[
-            EpochsCustomModifier(num_epochs=25),
-            TestEveryEpochModifier(),
-            AdamModifier()
         ]
     ),
 ]
