@@ -10,4 +10,11 @@ Configurations for all experiments, models, and datasets is in `./configs`.
 Run script `./download_preprocessed_data.sh` to download all preprocessed data into `./preprocessed_data`.  
 
 ## Training
-`train.py` is the main script for training the models.
+`train.py` is the main script for running experiments.    
+`python train.py` will do a dry run on the selected experiment.  
+To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data, run:
+```
+python train.py --production --test
+```
+Then select `social_dis_ner_experiment` from the menu.  
+The models' performance results are persisted at `./training_results/performance`.  
