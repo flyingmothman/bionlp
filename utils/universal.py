@@ -51,6 +51,7 @@ class OptionState(Enum):
 T = TypeVar('T')
 
 
+
 class Option(Generic[T]):
     def __init__(self, val: T):
         if val is None:
