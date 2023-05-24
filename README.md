@@ -7,14 +7,20 @@ Utility code is in `./utils`.
 Configurations for all experiments, models, and datasets is in `./configs`.  
 
 ## Preprocessed data
-Run script `./download_preprocessed_data.sh` to download all preprocessed data into `./preprocessed_data`.  
+Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`.  
 
 ## Training
-`train.py` is the main script for running experiments.    
-`python train.py` will do a dry run on the selected experiment.  
+`train.py` is the main script for running experiments -- experiments involve training and evaluating models.  
+Running `python train.py` (no arguments) will start a test-run, which will train the 
+models on a very small subset of the data and then evaluate them on the validation set.  
+
+
 To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data, run:
 ```
 python train.py --production --test
 ```
-Then select `social_dis_ner_experiment` from the menu.  
+`--production`: indicates that *all* the training data should be used.
+`--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
+
+`train.py` will prompt the user to select an experiment (e.g. `social_dis_ner_experiment`) from the menu.  
 The models' performance results are persisted at `./training_results/performance`.  
