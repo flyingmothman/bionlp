@@ -22,5 +22,5 @@ python train.py --production --test
 `--production`: indicates that *all* the training data should be used.  
 `--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
 
-`train.py` will prompt the user to select an experiment (e.g. `social_dis_ner_experiment`) from the menu.  
+As soon as it starts, `train.py` will prompt the user to select an experiment (e.g. `social_dis_ner_experiment`) from the menu.  
 The models' performance results are persisted at `./training_results/performance`.  
