@@ -19,7 +19,7 @@ To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on 
 ```
 python train.py --production --test
 ```
-`--production`: indicates that *all* the training data should be used.
+`--production`: indicates that *all* the training data should be used.  
 `--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
 
 `train.py` will prompt the user to select an experiment (e.g. `social_dis_ner_experiment`) from the menu.  
