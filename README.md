@@ -7,7 +7,7 @@ Utility code is in `./utils`.
 Configurations for all experiments, models, and datasets is in `./configs`.  
 
 ## Preprocessed data
-Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`.  
+Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`. The models' performance results are persisted at `./training_results/performance`.
 
 ## Training
 `train.py` is the main script for running experiments -- experiments involve training and evaluating models.  
@@ -22,5 +22,5 @@ python train.py --production --test
 `--production`: indicates that *all* the training data should be used.  
 `--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
 
-As soon as it starts, `train.py` will prompt the user to select an experiment (e.g. `social_dis_ner_experiment`) from the menu.  
-The models' performance results are persisted at `./training_results/performance`.  
+As soon as it starts, `train.py` will prompt the user to select an experiment.  
+Select `social_dis_ner_experiment` from the menu.  
