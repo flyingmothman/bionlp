@@ -3,6 +3,7 @@
 This repo **will soon** contain all the code(preprocessing, postprocessing, modeling, training) used in the paper "Comparing and combining some popular NER approaches on Biomedical tasks".  
 The code for all models is in `./models`.  
 Utility code is in `./utils`.  
+Code for preprocessing datasets (getting data ready for training) can be found in `./preprocessing`  
 Configurations for all experiments, models, and datasets is in `./configs`.  
 
 ## Requirements
