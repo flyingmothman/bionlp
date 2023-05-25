@@ -32,12 +32,12 @@ Run script `./download_preprocessed_data.sh` to download all preprocessed traini
 Running `python train.py` (no arguments) will start a test-run, which will train the 
 models on a very small subset of the data and then evaluate them on the validation set.  
 
-To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data, run:
+To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data:
+- Run:
 ```
 python train.py --production --test
 ```
 `--production`: indicates that *all* the training data should be used.  
 `--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
 
-As soon as it starts, `train.py` will prompt the user to select an experiment.  
-Select `social_dis_ner_experiment` from the menu.  
+- As soon as it starts, `train.py` will prompt the user to select an experiment. Select `social_dis_ner_experiment` from the menu.  
