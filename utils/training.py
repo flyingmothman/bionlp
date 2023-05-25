@@ -8,8 +8,9 @@ from transformers.optimization import Adafactor
 from transformers.tokenization_utils_base import BatchEncoding
 from utils.structs import ExperimentConfig, Annotation, Label, BioTag,\
         DatasetConfig, Sample, ModelConfig, TrainingArgs, AnnotationCollection,\
-        DatasetSplit, EvaluationType, SampleAnnotations, SampleId
-from utils.universal import Option, device, blue, green, red, f1
+        DatasetSplit, EvaluationType, SampleAnnotations, SampleId, SampleAnnotation
+from utils.universal import Option, device, blue, green, red, f1, get_f1_score_from_sets
+from utils.config import get_dataset_config_by_name
 from pathlib import Path
 import glob
 import argparse
@@ -920,3 +921,47 @@ def create_visualization_file(
             ofsetted_annotation.label_type,
             ofsetted_annotation.features)
     gate_document.save(visualization_file_path)
+
+
+def read_meta_predictions_file_with_type_information(predictions_file_path: str) -> set[SampleAnnotation]:
+    df = pd.read_csv(predictions_file_path, sep='\t')
+    ret = set()
+    num_removed = 0
+    for _, row in df.iterrows():
+        sample_id = str(row['sample_id'])
+        original_sample_id, start, end, entity_type = sample_id.split('@@@')
+        label = row['label']
+        assert label in ['correct', 'incorrect']
+        if label == 'correct':
+            ret.add(SampleAnnotation(str(original_sample_id), entity_type, int(start), int(end)))
+        else:
+            num_removed += 1
+    print(f"removed {num_removed} predictions")
+    return ret
+
+
+def get_train_samples_by_dataset_name(dataset_config_name: str) -> list[Sample]:
+    return get_train_samples(get_dataset_config_by_name(dataset_config_name))
+
+
+def get_valid_samples_by_dataset_name(dataset_config_name: str) -> list[Sample]:
+    return get_valid_samples(get_dataset_config_by_name(dataset_config_name))
+
+
+def get_test_samples_by_dataset_name(dataset_config_name: str) -> list[Sample]:
+    return get_test_samples(get_dataset_config_by_name(dataset_config_name))
+
+
+def evaluate_meta_predictions(meta_predictions_file_path: str, dataset_config_name: str):
+    """
+    Given meta's predictions in `meta_predictions_file_path` for a dataset
+    corresponding to `dataset_config_name`, evaluate meta's performance.
+    """
+    meta_predictions_set = read_meta_predictions_file_with_type_information(meta_predictions_file_path)
+    gold_samples = get_test_samples_by_dataset_name(dataset_config_name)
+    gold_predictions: set[SampleAnnotation] = set()
+    for gold_sample in gold_samples:
+        for gold_anno in gold_sample.annos.gold:
+            gold_predictions.add(SampleAnnotation(str(gold_sample.id), gold_anno.label_type, int(gold_anno.begin_offset), int(gold_anno.end_offset)))
+
+    print(get_f1_score_from_sets(gold_predictions, meta_predictions_set))

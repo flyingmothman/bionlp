@@ -115,3 +115,10 @@ def f1(TP, FP, FN) -> tuple[float, float, float]:
     else:
         f1_score = 2 * (precision * recall) / (precision + recall)
         return f1_score, precision, recall
+
+
+def get_f1_score_from_sets(gold_set: set, predicted_set: set):
+    true_positives = len(gold_set.intersection(predicted_set))
+    false_positives = len(predicted_set.difference(gold_set))
+    false_negatives = len(gold_set.difference(predicted_set))
+    return f1(TP=true_positives, FP=false_positives, FN=false_negatives)
