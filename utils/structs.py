@@ -160,3 +160,32 @@ class TrainingArgs:
 
 SampleAnnotations = dict[str, list[Annotation]]
 SampleId = str
+
+
+class Dataset(Enum):
+    """
+    Enumerating all datasets that can currently
+    be preprocessed by the framework.
+    """
+    social_dis_ner = 1
+    few_nerd = 2
+    genia = 3
+    living_ner = 4
+    multiconer_coarse = 5
+    multiconer_fine = 6
+    legaleval_judgement = 7
+    legaleval_preamble = 8
+    cdr = 9
+    chem_drug_ner = 10
+    ncbi_disease = 11
+
+
+class PreprocessorRunType(Enum):
+    """
+    While preprocessing, it is useful to be able to
+    specify whether we want to do a dry-run or
+    not -- preprocessing can be expensive in
+    terms of compute. 
+    """
+    production = 0
+    dry_run = 1

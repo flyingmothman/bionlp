@@ -5,6 +5,7 @@ import torch
 import json
 from utils.structs import Annotation
 import pandas as pd
+from pathlib import Path
 
 
 def print_dict(some_dict):
@@ -122,3 +123,23 @@ def get_f1_score_from_sets(gold_set: set, predicted_set: set):
     false_positives = len(predicted_set.difference(gold_set))
     false_negatives = len(gold_set.difference(predicted_set))
     return f1(TP=true_positives, FP=false_positives, FN=false_negatives)
+
+
+def open_make_dirs(file_path, mode):
+    Path(file_path).parent.mkdir(parents=True, exist_ok=True)
+    return open(file_path, mode)
+
+
+def create_directory_structure(folder_path: str):
+    """
+    Creates all the directories on the given `folder_path`.
+    Doesn't throw an error if directories already exist.
+    Args:
+        folder_path: the directory path to create.
+    """
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
+
+
+
+def assert_equals(lhs, rhs, message=""):
+    assert lhs == rhs, f"{message} \n LHS: {lhs} \n RHS: {rhs}"
