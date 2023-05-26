@@ -7,6 +7,11 @@ from typing import Optional
 
 @dataclass
 class Annotation:
+    """
+    Represents a segment of text which has been labeled with `label_type`. 
+    The text itself is stored in `extraction`. Additional information attached 
+    to the annotation is stored in `features`.
+    """
     begin_offset: int
     end_offset: int
     label_type: str
@@ -15,6 +20,10 @@ class Annotation:
 
 
 class SampleAnnotation(NamedTuple):
+    """
+    Represents a segment of text in sample `sample_id` that has been
+    labeled with `type_string`.
+    """
     sample_id: str
     type_string: str
     begin_offset: int
@@ -23,12 +32,21 @@ class SampleAnnotation(NamedTuple):
 
 @dataclass
 class AnnotationCollection:
+    """
+    Container with two sets of annotations: `gold` and `external`.
+    `gold` annotations represent the true/gold labels on a sample.
+    `external` annotations represent labels that have been generated
+    using an external resource like ChatGPT.
+    """
     gold: list[Annotation]
     external: list[Annotation]
 
 
 @dataclass
 class Sample:
+    """
+    Represents one sample of the training data.
+    """
     text: str
     id: str
     annos: AnnotationCollection
@@ -37,6 +55,9 @@ class Sample:
 
 @dataclass
 class DatasetConfig:
+    """
+    Describes a preprocessed dataset.
+    """
     train_samples_file_path: str
     valid_samples_file_path: str
     test_samples_file_path: str
@@ -51,6 +72,10 @@ class DatasetConfig:
 
 @dataclass
 class ModelConfig:
+    """
+    Describes a machine learning model that uses
+    a pretrained transformer.
+    """
     model_config_name: str
     pretrained_model_name: str
     pretrained_model_output_dim: int
@@ -70,6 +95,9 @@ class ModelConfig:
 
 @dataclass
 class PreprocessorConfig:
+    """
+    Describes a dataset preprocessor.
+    """
     preprocessor_config_name: str
     preprocessor_class_path: str
     preprocessor_class_init_params: dict
@@ -87,6 +115,9 @@ class EvaluationType(Enum):
 
 @dataclass
 class ExperimentConfig:
+    """
+    Describes an experiment to be run.
+    """
     dataset_config: DatasetConfig
     model_config: ModelConfig
     testing_frequency: int
@@ -96,6 +127,10 @@ class ExperimentConfig:
 
 
 class BioTag(Enum):
+    """
+    The tags in the BIO(beginning, inside, outside) 
+    sequence-labeling scheme.
+    """
     out = 0
     begin = 1
     inside = 2
@@ -103,7 +138,10 @@ class BioTag(Enum):
 
 OUTSIDE_LABEL_STRING = 'o'
 
-class Label:
+class BioLabel:
+    """
+    Represents a BIO label.
+    """
     def __init__(self, label_type, bio_tag):
         self.label_type = label_type
         self.bio_tag = bio_tag
@@ -131,13 +169,13 @@ class Label:
         return hash(self.__key())
 
     def __eq__(self, other):
-        if isinstance(other, Label):
+        if isinstance(other, BioLabel):
             return (other.label_type == self.label_type) and (other.bio_tag == self.bio_tag)
         raise NotImplementedError()
 
     @staticmethod
     def get_outside_label():
-        return Label(OUTSIDE_LABEL_STRING, BioTag.out)
+        return BioLabel(OUTSIDE_LABEL_STRING, BioTag.out)
 
 
 class DatasetSplit(Enum):
@@ -152,6 +190,9 @@ class DatasetSplit(Enum):
 
 @dataclass
 class TrainingArgs:
+    """
+    Describing a training process.
+    """
     device: torch.device
     is_dry_run_mode: bool
     experiment_name: str

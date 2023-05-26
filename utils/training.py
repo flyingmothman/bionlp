@@ -6,7 +6,7 @@ from gatenlp import Document
 from transformers.models.auto.tokenization_auto import AutoTokenizer
 from transformers.optimization import Adafactor
 from transformers.tokenization_utils_base import BatchEncoding
-from utils.structs import ExperimentConfig, Annotation, Label, BioTag,\
+from utils.structs import ExperimentConfig, Annotation, BioLabel, BioTag,\
         DatasetConfig, Sample, ModelConfig, TrainingArgs, AnnotationCollection,\
         DatasetSplit, EvaluationType, SampleAnnotations, SampleId, SampleAnnotation
 from utils.universal import Option, device, blue, green, red, f1, get_f1_score_from_sets
@@ -49,13 +49,13 @@ def get_bio_labels_for_bert_tokens_batch(
     return labels_batch
 
 
-def get_labels_bio_new(token_anno_list: list[Option[Annotation]], gold_annos: list[Annotation]) -> list[Label]:
+def get_labels_bio_new(token_anno_list: list[Option[Annotation]], gold_annos: list[Annotation]) -> list[BioLabel]:
     """
     Takes all tokens and gold annotations for a sample
     and outputs a labels(one for each token) representing 
     whether a token is at the beginning(B), inside(I), or outside(O) of an entity.
     """
-    new_labels = [Label.get_outside_label() for _ in token_anno_list]
+    new_labels = [BioLabel.get_outside_label() for _ in token_anno_list]
     for gold_anno in gold_annos:
         found_start = False
         start_idx = None
@@ -63,7 +63,7 @@ def get_labels_bio_new(token_anno_list: list[Option[Annotation]], gold_annos: li
             if token_anno.is_something() and (token_anno.get_value().begin_offset == gold_anno.begin_offset):
                 found_start = True
                 start_idx = i
-                new_labels[i] = Label(gold_anno.label_type, BioTag.begin)
+                new_labels[i] = BioLabel(gold_anno.label_type, BioTag.begin)
                 break
         if not found_start:
             print(f"WARN: could not generate BIO tags for gold anno: {gold_anno}")
@@ -75,13 +75,13 @@ def get_labels_bio_new(token_anno_list: list[Option[Annotation]], gold_annos: li
                     break
                 else:
                     assert gold_anno.begin_offset <= curr_token_anno.get_value().begin_offset < gold_anno.end_offset
-                    new_labels[i] = Label(gold_anno.label_type, BioTag.inside)
+                    new_labels[i] = BioLabel(gold_anno.label_type, BioTag.inside)
     return new_labels
 
 
 
 def get_annos_from_bio_labels(
-        prediction_labels: list[Label],
+        prediction_labels: list[BioLabel],
         batch_encoding,
         batch_idx: int,
         sample_text: str,
@@ -103,7 +103,7 @@ def get_annos_from_bio_labels(
     return ret
 
 
-def get_spans_from_bio_labels_token_indices(predictions_sub: list[Label]) -> list[tuple]:
+def get_spans_from_bio_labels_token_indices(predictions_sub: list[BioLabel]) -> list[tuple]:
     span_list = []
     start = None
     start_label = None
@@ -179,18 +179,18 @@ def enumerate_spans(sentence: list,
     return spans
 
 
-def get_bio_label_idx_dicts(all_types: list[str], dataset_config: DatasetConfig) -> tuple[dict[Label, int], dict[int, Label]]:
+def get_bio_label_idx_dicts(all_types: list[str], dataset_config: DatasetConfig) -> tuple[dict[BioLabel, int], dict[int, BioLabel]]:
     """
     get dictionaries mapping from BIO labels to their corresponding indices.
     """
     label_to_idx_dict = {}
     for type_string in all_types:
         assert len(type_string), "Type cannot be an empty string"
-        label_to_idx_dict[Label(type_string, BioTag.begin)] = len(
+        label_to_idx_dict[BioLabel(type_string, BioTag.begin)] = len(
             label_to_idx_dict)
-        label_to_idx_dict[Label(type_string, BioTag.inside)] = len(
+        label_to_idx_dict[BioLabel(type_string, BioTag.inside)] = len(
             label_to_idx_dict)
-    label_to_idx_dict[Label.get_outside_label()] = len(label_to_idx_dict)
+    label_to_idx_dict[BioLabel.get_outside_label()] = len(label_to_idx_dict)
     idx_to_label_dict = {}
     for label in label_to_idx_dict:
         idx_to_label_dict[label_to_idx_dict[label]] = label
