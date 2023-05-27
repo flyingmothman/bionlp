@@ -42,3 +42,7 @@ python train.py --production --test
 `--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
 
 - As soon as it starts, `train.py` will prompt the user to select an experiment. Select `social_dis_ner_experiment` from the menu.  
+
+
+## Preprocessing
+`preprocess.py` is the main script for preprocessing raw data.
