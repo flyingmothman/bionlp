@@ -1,14 +1,17 @@
 from structs import *
 import json
 from abc import ABC, abstractmethod
-from pydoc import locate
-from enum import Enum
-from typing import Type
-import yaml
 from utils.structs import PreprocessorConfig
-from utils.universal import blue, green, red, open_make_dirs, \
-        create_directory_structure, print_section, assert_equals 
+from utils.universal import blue, green, red, \
+        open_make_dirs, \
+        create_directory_structure, print_section,\
+        contained_in
+
+from tqdm import tqdm as show_progress
+from pydoc import locate
 from gatenlp import Document
+import spacy
+from spacy.tokens.span import Span as SpacySpan
 
 
 class Annotator(ABC):
@@ -228,3 +231,104 @@ def create_visualization_file(
 def write_samples(samples: list[Sample], output_json_file_path: str):
     with open(output_json_file_path, 'w') as output_file:
         json.dump(samples, output_file, default=vars)
+
+
+def get_sentence_sample(sentence: SpacySpan, sentence_idx: int, sample: Sample) -> Sample:
+    gold_annos = sample.annos.gold
+    gold_annos_accross_boundary = [
+        anno 
+        for anno in gold_annos
+        if (not contained_in(
+                    outside=(sentence.start_char, sentence.end_char), 
+                    inside=(anno.begin_offset, anno.end_offset))
+            )
+            and
+            (
+                (sentence.start_char <= anno.begin_offset <= sentence.end_char)
+                or
+                (sentence.start_char <= anno.end_offset <= sentence.end_char)
+            )  
+    ]
+    if len(gold_annos_accross_boundary):
+        print(red(f"WARN : Gold Annos accross sentence boundary \n annos: {gold_annos_accross_boundary} \n sample: {sample}"))
+
+    gold_annos_in_sentence = [
+        anno 
+        for anno in gold_annos
+        if contained_in(
+            outside=(sentence.start_char, sentence.end_char), 
+            inside=(anno.begin_offset, anno.end_offset)
+        )
+    ]
+
+    annos_with_corrected_offsets = [
+        Annotation(
+            begin_offset=(anno.begin_offset - sentence.start_char),
+            end_offset=(anno.end_offset - sentence.start_char),
+            label_type=anno.label_type,
+            extraction=anno.extraction
+            )
+        for anno in gold_annos_in_sentence
+    ]
+
+    for anno in annos_with_corrected_offsets:
+        if sentence.text[anno.begin_offset:anno.end_offset] != anno.extraction:
+            print(f"WARN: anno sentence text does not match extraction :\n"
+                  f"anno text: {sentence.text[anno.begin_offset: anno.end_offset]}\n"
+                  f"extraction: {anno.extraction}\n"
+                  f"sample: {sample}")
+
+    return Sample(
+        text=sentence.text,
+        id=sample.id + str(sentence_idx),
+        annos=AnnotationCollection(gold=annos_with_corrected_offsets, external=[])
+    ) 
+
+
+class SentenceAnnotator(Annotator):
+    """
+    Break up a each sample into smaller samples,
+    with each smaller sample corresponding to a sentence.
+    Sentences are identified using Spacy.
+    """
+    def __init__(self) -> None:
+        super().__init__("SentenceAnnotator")
+        self.nlp = spacy.load('en_core_web_md')
+
+    def annotate_helper(self, samples: list[Sample], dataset_split: DatasetSplit) -> list[Sample]:
+        sentence_samples = []
+        for sample in show_progress(samples):
+            spacy_doc = self.nlp(sample.text)
+            for sent_idx, spacy_sentence in enumerate(spacy_doc.sents):
+                sentence_samples.append(
+                    get_sentence_sample(
+                        sentence=spacy_sentence,
+                        sentence_idx=sent_idx,
+                        sample=sample
+                    )
+                )
+        return sentence_samples
+
+
+def get_sentence_annotator():
+    return SentenceAnnotator()
+
+
+
+def get_preprocessor_class_from_path(preprocessor_class_path: str) -> type:
+    return locate(preprocessor_class_path)
+
+
+def preprocess(
+        preprocessor_config: PreprocessorConfig,
+        run_mode: PreprocessorRunType,
+        dataset_splits: list[DatasetSplit]
+):
+    preprocessor_class = get_preprocessor_class_from_path(preprocessor_config.preprocessor_class_path)
+    assert preprocessor_class is not None, f"Could not get preprocessor class {preprocessor_config.preprocessor_class_path}"
+    for split in dataset_splits:
+        preprocessor_params = preprocessor_config.preprocessor_class_init_params.copy()
+        preprocessor_params['dataset_split'] = split
+        preprocessor_params['run_mode'] = run_mode
+        preprocessor = preprocessor_class(**preprocessor_params)
+        preprocessor.run()

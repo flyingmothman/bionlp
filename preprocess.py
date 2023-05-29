@@ -1,5 +1,6 @@
-from utils.structs import PreprocessorRunType, preprocess, DatasetSplit
-from all_preprocessor_configs import config_meta_genia
+from utils.structs import PreprocessorRunType, DatasetSplit
+from utils.preprocessing import preprocess
+from configs.preprocessing_configs.all_preprocessing_configs import config_meta_genia
 
 preprocessor_config = config_meta_genia()
 preprocess(

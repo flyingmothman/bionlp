@@ -7,7 +7,6 @@ from utils.structs import Annotation
 import pandas as pd
 from pathlib import Path
 
-
 def print_dict(some_dict):
     for key in some_dict:
         print(key, some_dict[key])
@@ -143,3 +142,8 @@ def create_directory_structure(folder_path: str):
 
 def assert_equals(lhs, rhs, message=""):
     assert lhs == rhs, f"{message} \n LHS: {lhs} \n RHS: {rhs}"
+
+
+def contained_in(outside: tuple[int,int], inside: tuple[int,int]):
+    return (outside[0] <= inside[0]) and \
+           (inside[1] <= outside[1])
