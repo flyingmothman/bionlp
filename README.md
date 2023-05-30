@@ -35,12 +35,10 @@ on the validation set. The models' performance results are persisted at `./train
 ### Example
 To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data. Run:
 ```
-python train.py --production --test
+python train.py --production --test --experiment=social_dis_ner_experiment
 ```
 `--production`: indicates that *all* the training data should be used.  
 `--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
-`train.py` will prompt you to select an experiment. Select `social_dis_ner_experiment` from the menu, and the script
-script will start training and evaluating the models.
 
 
 ## Preprocessing
