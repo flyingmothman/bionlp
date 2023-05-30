@@ -12,14 +12,16 @@ You can create an anaconda python 3.10 environment called `my_env` with:
 ```
 conda create -n my_env python=3.10
 ```
+
 - [fzf](https://github.com/junegunn/fzf) : Install with
 ```
 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 yes | ~/.fzf/install
 ```
+
 - [allennlp](https://github.com/allenai/allennlp) : Install with
 ```
-# on Debian and Ubuntu
+# On Debian and Ubuntu
 sudo apt-get -y install pkg-config
 sudo apt-get -y install build-essential
 pip install allennlp
