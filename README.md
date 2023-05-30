@@ -6,7 +6,7 @@ Code for preprocessing datasets (getting data ready for training) can be found i
 Configurations for all experiments, models, and datasets are in `./configs`.   
 
 ## Requirements
-Works with `Python version 3.10` and above ; We use an Anaconda python 3.10 environment and install dependencies using `pip install -r requirements.txt`.  
+Works with `Python version 3.10` and above ; We use an Anaconda python 3.10 environment.
 You can create an anaconda python 3.10 environment called `my_env` with:
 ```
 conda create -n my_env python=3.10
@@ -23,6 +23,8 @@ sudo apt-get -y install pkg-config
 sudo apt-get -y install build-essential
 pip install allennlp
 ```
+
+All remaining dependencies can be installed using `pip install -r requirements.txt`. 
 
 ## Preprocessed data
 Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`. The models' performance results are persisted at `./training_results/performance`.
