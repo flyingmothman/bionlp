@@ -30,12 +30,13 @@ pip install allennlp
 All remaining dependencies can be installed using `pip install -r requirements.txt`. 
 
 ## Preprocessed data
-Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`. The models' performance results are persisted at `./training_results/performance`.
+Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`. 
 
 ## Training
-`train.py` is the main script for running experiments -- experiments involve training and evaluating models.  
-Running `python train.py` (no arguments) will start a test-run, which will train the 
-models on a very small subset of the data and then evaluate them on the validation set.  
+`train.py` is the main script for running experiments -- experiments involve training 
+and evaluating models. Running `python train.py` (no arguments) will start a test-run, 
+which will train the models on a very small subset of the data and then evaluate them 
+on the validation set. The models' performance results are persisted at `./training_results/performance`.
 
 ### Example
 To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data. Run:
