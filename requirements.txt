@@ -5,7 +5,6 @@ gatenlp==1.0.8
 numpy==1.24.1
 overrides==3.1.0
 pandas==1.5.2
-pyfzf==0.3.1
 PyYAML==6.0
 spacy==3.3.2
 torch==1.12.1

@@ -14,7 +14,6 @@ from utils.config import get_dataset_config_by_name
 from pathlib import Path
 import glob
 import argparse
-from pyfzf.pyfzf import FzfPrompt
 import csv
 import json
 from pydoc import locate
@@ -238,14 +237,13 @@ def parse_training_args() -> TrainingArgs:
     parser.add_argument('--production', action='store_true',
                         help='start training on ALL data (10 samples only by default)')
     parser.add_argument('--test', action='store_true', help="Evaluate on the test dataset.")
+    parser.add_argument("--experiment", type=str, help="The name of the experiment.")
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("using device:", device)
 
-    experiment_name = get_experiment_name_from_user()
-
-    return TrainingArgs(device, not args.production, experiment_name, args.test)
+    return TrainingArgs(device, not args.production, args.experiment, args.test)
 
 
 def get_all_experiment_names():
@@ -265,14 +263,6 @@ def get_experiments(experiment_name: str) -> list[ExperimentConfig]:
     experiments_module = importlib.import_module(f"configs.experiment_configs.{experiment_name}")
     experiments: list[ExperimentConfig] = experiments_module.experiments
     return experiments
-
-
-def get_experiment_name_from_user() -> str:
-    all_experiment_names = get_all_experiment_names()
-    # use fzf to select an experiment
-    fzf = FzfPrompt()
-    chosen_experiment = fzf.prompt(all_experiment_names)[0]
-    return chosen_experiment
 
 
 def create_directory_structure(folder_path: str):
