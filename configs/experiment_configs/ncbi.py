@@ -5,7 +5,7 @@ experiments = [
     # SPAN
     get_experiment_config(
         model_config_module_name='span_default',
-        dataset_config_name='social_dis_ner_vanilla',
+        dataset_config_name='ncbi_disease_sentence',
         modifiers=[
             Epochs20Modifier(),
             SmallerSpanWidthModifier(),
@@ -17,7 +17,7 @@ experiments = [
     # SEQ
     get_experiment_config(
         model_config_module_name='seq_default',
-        dataset_config_name='social_dis_ner_vanilla',
+        dataset_config_name='ncbi_disease_sentence',
         modifiers=[
             Epochs20Modifier(),
             TestEveryEpochModifier(),
@@ -28,7 +28,7 @@ experiments = [
     # CRF
     get_experiment_config(
         model_config_module_name='seq_crf_default',
-        dataset_config_name='social_dis_ner_vanilla',
+        dataset_config_name='ncbi_disease_sentence',
         modifiers=[
             EpochsCustomModifier(num_epochs=25),
             TestEveryEpochModifier(),

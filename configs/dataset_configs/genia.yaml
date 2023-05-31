@@ -4,7 +4,7 @@ test_samples_file_path: ./preprocessed_data/genia_test_config_genia_production_s
 types_file_path: ./preprocessed_data/genia_train_vanilla_types.txt
 num_types: 5
 dataset_name: genia
-dataset_config_name: genia_config_vanilla
+dataset_config_name: genia
 expected_number_of_train_samples: 9273
 expected_number_of_valid_samples: 4636
 expected_number_of_test_samples: 4637
