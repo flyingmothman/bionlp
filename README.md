@@ -41,7 +41,7 @@ python train.py --production --test --experiment=social_dis_ner_experiment
 `--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
 The details of the experiment can be found in `./configs/experiment_configs/social_dis_ner_experiment.py`  
 <br/><br/> 
-Similarly, for training the models on GENIA, run :
+Similarly, for training the three models on GENIA, run :
 ```
 python train.py --production --test --experiment=genia
 ```

@@ -237,7 +237,7 @@ def parse_training_args() -> TrainingArgs:
     parser.add_argument('--production', action='store_true',
                         help='start training on ALL data (10 samples only by default)')
     parser.add_argument('--test', action='store_true', help="Evaluate on the test dataset.")
-    parser.add_argument("--experiment", type=str, help="The name of the experiment.")
+    parser.add_argument('--experiment', type=str, help="The name of the experiment -- same as the experiment-config file name in ./configs/experiment_configs/")
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
