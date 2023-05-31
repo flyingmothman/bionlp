@@ -1,0 +1,10 @@
+train_samples_file_path: ./preprocessed_data/living_ner_train_config_meta_living_ner_production_samples.json
+valid_samples_file_path: ./preprocessed_data/living_ner_valid_config_meta_living_ner_production_samples.json
+test_samples_file_path: ./preprocessed_data/living_ner_test_config_meta_living_ner_production_samples.json
+types_file_path: ./preprocessed_data/living_ner_test_config_meta_living_ner_dry_run_types.txt
+num_types: 2
+dataset_name: living_ner
+dataset_config_name: living_ner_meta
+expected_number_of_train_samples: 37074
+expected_number_of_valid_samples: 6543
+expected_number_of_test_samples: 13312

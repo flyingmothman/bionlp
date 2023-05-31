@@ -1,0 +1,10 @@
+train_samples_file_path: ./preprocessed_data/genia_train_config_meta_genia_production_samples.json
+valid_samples_file_path: ./preprocessed_data/genia_valid_config_meta_genia_production_samples.json
+test_samples_file_path: ./preprocessed_data/genia_test_config_meta_genia_production_samples.json
+types_file_path: ./preprocessed_data/genia_train_config_meta_genia_production_types.txt
+num_types: 2
+dataset_name: genia
+dataset_config_name: genia_meta
+expected_number_of_train_samples: 47372
+expected_number_of_valid_samples: 8360
+expected_number_of_test_samples: 14666
