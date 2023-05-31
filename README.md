@@ -39,7 +39,20 @@ python train.py --production --test --experiment=social_dis_ner_experiment
 ```
 `--production`: indicates that *all* the training data should be used.  
 `--test`: indicates that the test data should also be used to evaluate the models(other than the validation data).  
-
+The details of the experiment can be found in `./configs/experiment_configs/social_dis_ner_experiment.py`  
+<br/><br/> 
+Similarly, for training the models on GENIA, run :
+```
+python train.py --production --test --experiment=genia
+```
+For NCBI-Diease, run:
+```
+python train.py --production --test --experiment=ncbi
+```
+For LivingNER, run:
+```
+python train.py --production --test --experiment=living_ner
+```
 
 ## Preprocessing
 `preprocess.py` is the main script for preprocessing raw data.
