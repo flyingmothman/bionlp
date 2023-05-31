@@ -1,6 +1,6 @@
 **Feel Free to create an Issue and Chat with me in the Issues section -- I will reply in at most 48 hours.**
 
-This repo contains all the code(preprocessing, postprocessing, modeling, training) used in the BioNLP paper "Comparing and combining some popular NER approaches on Biomedical tasks".  
+This repo contains all the code(preprocessing, postprocessing, modeling, training) used in the [BioNLP paper](https://arxiv.org/abs/2305.19120) "Comparing and combining some popular NER approaches on Biomedical tasks".  
 The code for all models is in `./models`.  
 Utility code is in `./utils`.   
 Code for preprocessing datasets (getting data ready for training) can be found in `./preprocessing`  
