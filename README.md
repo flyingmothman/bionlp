@@ -6,13 +6,13 @@ Utility code is in `./utils`.
 Code for preprocessing datasets (getting data ready for training) can be found in `./preprocessing`  
 Configurations for all experiments, models, and datasets are in `./configs`.   
 
-#### Table of Contents  
-[Requirements](#requirements)  
-[Preprocessed Data](#preprocess)
-[Training](#training)
-[Training the three models](#three)
-[Training the Meta model](#meta)
-[Preprocessing](#preprocessing)
+## Table of Contents  
+- [Requirements](#requirements)  
+- [Preprocessed Data](#preprocess)
+- [Training](#training)
+- [Training the three models](#three)
+- [Training the Meta model](#meta)
+- [Preprocessing](#preprocessing)
 
 
 <a name="requirements"/>
