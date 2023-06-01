@@ -9,12 +9,12 @@ Configurations for all experiments, models, and datasets are in `./configs`.
 ## Requirements
 Works with `Python version 3.10` and above ; We use an Anaconda python 3.10 environment.
 You can create an anaconda python 3.10 environment called `my_env` with:
-```
+```bash
 conda create --name my_env python=3.10
 ```
 
 - [allennlp](https://github.com/allenai/allennlp) : Install with:
-```
+```bash
 # On Debian and Ubuntu
 sudo apt-get -y install pkg-config
 sudo apt-get -y install build-essential
@@ -22,7 +22,7 @@ pip install allennlp
 ```
 
 All remaining dependencies can be installed by running `./setup_env.sh`, which installs as follows:
-```
+```bash
 echo "Install Requirements"
 pip install spacy
 pip install pudb
