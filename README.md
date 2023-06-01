@@ -10,7 +10,7 @@ Configurations for all experiments, models, and datasets are in `./configs`.
 Works with `Python version 3.10` and above ; We use an Anaconda python 3.10 environment.
 You can create an anaconda python 3.10 environment called `my_env` with:
 ```
-conda create -n my_env python=3.10
+conda create --name my_env python=3.10
 ```
 
 - [allennlp](https://github.com/allenai/allennlp) : Install with
