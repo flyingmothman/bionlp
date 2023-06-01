@@ -6,6 +6,16 @@ Utility code is in `./utils`.
 Code for preprocessing datasets (getting data ready for training) can be found in `./preprocessing`  
 Configurations for all experiments, models, and datasets are in `./configs`.   
 
+#### Table of Contents  
+[Requirements](#requirements)  
+[Preprocessed Data](#preprocess)
+[Training](#training)
+[Training the three models](#three)
+[Training the Meta model](#meta)
+[Preprocessing](#preprocessing)
+
+
+<a name="requirements"/>
 ## Requirements
 Works with `Python version 3.10` and above ; We use an [Anaconda](https://www.anaconda.com/download) python 3.10 environment.
 You can create an anaconda python 3.10 environment called `my_env` with:
@@ -40,15 +50,20 @@ echo "Installing Pytorch"
 pip install torch torchvision torchaudio --upgrade
 ```
 
+<a name="preprocess"/>
 ## Preprocessed data
 Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`. 
 
+
+<a name="training"/>
 ## Training
 `train.py` is the main script for running experiments -- experiments involve training 
 and evaluating models. Running `python train.py` (no arguments) will start a test-run, 
 which will train the models on a very small subset of the data and then evaluate them 
 on the validation set. The models' performance results are stored in `./training_results/performance`.
 
+
+<a name="three"/>
 ### Training and evaluating `SEQ`, `SpanPred`, and `SeqCRF` models.
 To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data. Run:
 ```
@@ -71,6 +86,7 @@ For LivingNER, run:
 python train.py --production --test --experiment=living_ner
 ```
 
+<a name="meta"/>
 ### Training and evaluating the `Meta` model.
 For SocialDisNER, run:
 ```
@@ -89,5 +105,6 @@ For LivingNER, run:
 python train.py --production --test --experiment=living_ner_meta
 ```
 
+<a name="preprocessing"/>
 ## Preprocessing
 `preprocess.py` is the main script for preprocessing raw data.
