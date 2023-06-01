@@ -13,7 +13,7 @@ You can create an anaconda python 3.10 environment called `my_env` with:
 conda create --name my_env python=3.10
 ```
 
-- [allennlp](https://github.com/allenai/allennlp) : Install with
+- [allennlp](https://github.com/allenai/allennlp) : Install with:
 ```
 # On Debian and Ubuntu
 sudo apt-get -y install pkg-config
