@@ -21,7 +21,24 @@ sudo apt-get -y install build-essential
 pip install allennlp
 ```
 
-All remaining dependencies can be installed using `pip install -r requirements.txt`. 
+All remaining dependencies can be installed by running `./setup_env.sh`, which installs as follows:
+```
+echo "Install Requirements"
+pip install spacy
+pip install pudb
+pip install colorama
+pip install gatenlp
+pip install pandas
+pip install transformers
+pip install allennlp
+pip install flair
+pip install benepar
+pip install ipython
+pip install overrides
+
+echo "Installing Pytorch"
+pip install torch torchvision torchaudio --upgrade
+```
 
 ## Preprocessed data
 Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`. 
