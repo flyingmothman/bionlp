@@ -32,7 +32,7 @@ and evaluating models. Running `python train.py` (no arguments) will start a tes
 which will train the models on a very small subset of the data and then evaluate them 
 on the validation set. The models' performance results are persisted at `./training_results/performance`.
 
-### Example
+### Training and evaluating `SEQ`, `SpanPred`, and `SeqCRF` models.
 To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data. Run:
 ```
 python train.py --production --test --experiment=social_dis_ner_experiment
@@ -52,6 +52,24 @@ python train.py --production --test --experiment=ncbi
 For LivingNER, run:
 ```
 python train.py --production --test --experiment=living_ner
+```
+
+### Training and evaluating the `Meta` model.
+For SocialDisNER, run:
+```
+python train.py --production --test --experiment=social_dis_ner_meta
+```
+For GENIA, run:
+```
+python train.py --production --test --experiment=genia_meta
+```
+For NCBI Disease, run:
+```
+python train.py --production --test --experiment=ncbi_disease_meta
+```
+For LivingNER, run:
+```
+python train.py --production --test --experiment=living_ner_meta
 ```
 
 ## Preprocessing
