@@ -7,7 +7,7 @@ Code for preprocessing datasets (getting data ready for training) can be found i
 Configurations for all experiments, models, and datasets are in `./configs`.   
 
 ## Requirements
-Works with `Python version 3.10` and above ; We use an Anaconda python 3.10 environment.
+Works with `Python version 3.10` and above ; We use an [Anaconda](https://www.anaconda.com/download) python 3.10 environment.
 You can create an anaconda python 3.10 environment called `my_env` with:
 ```bash
 conda create --name my_env python=3.10
