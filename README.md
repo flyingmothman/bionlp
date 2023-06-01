@@ -21,7 +21,7 @@ sudo apt-get -y install build-essential
 pip install allennlp
 ```
 
-All remaining dependencies can be installed by running `./setup_env.sh`, which simply includes the follows:
+All remaining dependencies can be installed by running `./setup_env.sh`, which simply includes:
 ```bash
 echo "Install Requirements"
 pip install spacy
