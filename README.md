@@ -18,6 +18,7 @@ conda create --name my_env python=3.10
 # On Debian and Ubuntu
 sudo apt-get -y install pkg-config
 sudo apt-get -y install build-essential
+
 pip install allennlp
 ```
 
