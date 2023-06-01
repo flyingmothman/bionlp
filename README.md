@@ -30,7 +30,6 @@ pip install colorama
 pip install gatenlp
 pip install pandas
 pip install transformers
-pip install allennlp
 pip install flair
 pip install benepar
 pip install ipython
