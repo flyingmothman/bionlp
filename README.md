@@ -30,7 +30,7 @@ Run script `./download_preprocessed_data.sh` to download all preprocessed traini
 `train.py` is the main script for running experiments -- experiments involve training 
 and evaluating models. Running `python train.py` (no arguments) will start a test-run, 
 which will train the models on a very small subset of the data and then evaluate them 
-on the validation set. The models' performance results are persisted at `./training_results/performance`.
+on the validation set. The models' performance results are stored in `./training_results/performance`.
 
 ### Training and evaluating `SEQ`, `SpanPred`, and `SeqCRF` models.
 To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data. Run:
