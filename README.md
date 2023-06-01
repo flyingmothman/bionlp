@@ -16,6 +16,7 @@ Configurations for all experiments, models, and datasets are in `./configs`.
 
 
 <a name="requirements"/>
+
 ## Requirements
 Works with `Python version 3.10` and above ; We use an [Anaconda](https://www.anaconda.com/download) python 3.10 environment.
 You can create an anaconda python 3.10 environment called `my_env` with:
@@ -51,11 +52,13 @@ pip install torch torchvision torchaudio --upgrade
 ```
 
 <a name="preprocess"/>
+
 ## Preprocessed data
 Run script `./download_preprocessed_data.sh` to download all preprocessed training data into `./preprocessed_data`. 
 
 
 <a name="training"/>
+
 ## Training
 `train.py` is the main script for running experiments -- experiments involve training 
 and evaluating models. Running `python train.py` (no arguments) will start a test-run, 
@@ -64,6 +67,7 @@ on the validation set. The models' performance results are stored in `./training
 
 
 <a name="three"/>
+
 ### Training and evaluating `SEQ`, `SpanPred`, and `SeqCRF` models.
 To train `SEQ`, `SpanPred`, and `SeqCRF` models on SocialDisNER and evaluate on test data. Run:
 ```
