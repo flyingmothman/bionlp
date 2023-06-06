@@ -2,6 +2,9 @@ from utils.preprocessing import get_sentence_annotator
 from utils.structs import Dataset, PreprocessorConfig
 import sys
 
+# *********************
+#  preprocessing configs for NER models below
+# **********************
 
 def config_genia() -> PreprocessorConfig:
     name_of_this_function = sys._getframe().f_code.co_name
@@ -53,6 +56,9 @@ def config_ncbi_meta_all_mistakes_all_gold() -> PreprocessorConfig:
     )
 
 
+# *********************
+#  META preprocessing configs
+# **********************
 def config_meta_social_dis_ner() -> PreprocessorConfig:
     name_of_this_function = sys._getframe().f_code.co_name
     return PreprocessorConfig(
