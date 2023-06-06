@@ -99,8 +99,8 @@ def config_meta_genia() -> PreprocessorConfig:
         preprocessor_class_init_params={
             'preprocessor_type': name_of_this_function,
             'annotators': [],
-            'test_files_folder_full_path': '/Users/harshverma/meta_bionlp/genia/test/Apps/harshv_research_nlp',
-            'valid_files_folder_full_path': '/Users/harshverma/meta_bionlp/genia/training/Apps/harshv_research_nlp',
+            'test_files_folder_full_path': './raw_data_for_meta/genia/test_predictions',
+            'valid_files_folder_full_path': './raw_data_for_meta/genia/validation_predictions',
             'dataset_config_name': 'genia_config_vanilla',
             'dataset': Dataset.genia
         }
