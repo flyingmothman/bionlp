@@ -13,6 +13,8 @@ Configurations for all experiments, models, and datasets are in `./configs`.
 - [Training the three models](#three)
 - [Training the Meta model](#meta)
 - [Preprocessing](#preprocessing)
+  - [Preprocessing data for NER models](#preprocessing-ner)
+  - [Preprocessing data for Meta](#preprocessing-meta)
 
 
 <a name="requirements"/>
@@ -113,4 +115,16 @@ python train.py --production --test --experiment=living_ner_meta
 <a name="preprocessing"/>
 
 ## Preprocessing
-`preprocess.py` is the main script for preprocessing raw data.
+Preprocessing involves preparing training data for models.
+
+<a name="preprocessing-ner"/>
+
+### Preprocessing data for NER models
+Use the available prepreocessing configurations(see example below) 
+for NER models in `all_preprocessing_configs.py` to prepare training
+data for the 3 NER models.   
+`./preprocess.py` shows how to preprocess the Genia dataset.
+
+<a name="preprocessing-meta"/>
+
+### Preprocessing data for Meta
