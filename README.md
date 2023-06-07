@@ -126,5 +126,5 @@ For example, `./preprocess.py` shows how to preprocess the Genia dataset.
 <a name="preprocessing-meta"/>
 
 ### Preprocessing data for Meta
-Use the Meta preprocessing configurations in `all_preprocessing_configs.py`.
-For example, `./preprocess_meta.py` uses the predictions made by `SEQ` and `SpanPred` on GENIA in `./raw_data_for_meta/genia` to prepare the training data for Meta. 
+Use the Meta preprocessing configurations in `all_preprocessing_configs.py` to prepare data for Meta.
+For example, `./preprocess_meta.py` uses the predictions made by `SEQ` and `SpanPred` on GENIA in `./raw_data_for_meta/genia` to prepare data for Meta. 
