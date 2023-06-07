@@ -44,6 +44,9 @@ def config_ncbi_disease_sentence() -> PreprocessorConfig:
     )
 
 
+# *********************
+#  META preprocessing configs
+# **********************
 def config_ncbi_meta_all_mistakes_all_gold() -> PreprocessorConfig:
     name_of_this_function = sys._getframe().f_code.co_name
     return PreprocessorConfig(
@@ -56,14 +59,11 @@ def config_ncbi_meta_all_mistakes_all_gold() -> PreprocessorConfig:
     )
 
 
-# *********************
-#  META preprocessing configs
-# **********************
 def config_meta_social_dis_ner() -> PreprocessorConfig:
     name_of_this_function = sys._getframe().f_code.co_name
     return PreprocessorConfig(
         preprocessor_config_name=name_of_this_function,
-        preprocessor_class_path='preprocessors.meta.MetaPreprocessor',
+        preprocessor_class_path='preprocessing.preprocessors.meta.MetaPreprocessor',
         preprocessor_class_init_params={
             'preprocessor_type': name_of_this_function,
             'annotators': [],
@@ -79,7 +79,7 @@ def config_meta_living_ner() -> PreprocessorConfig:
     name_of_this_function = sys._getframe().f_code.co_name
     return PreprocessorConfig(
         preprocessor_config_name=name_of_this_function,
-        preprocessor_class_path='preprocessors.meta.MetaPreprocessor',
+        preprocessor_class_path='preprocessing.preprocessors.meta.MetaPreprocessor',
         preprocessor_class_init_params={
             'preprocessor_type': name_of_this_function,
             'annotators': [],
@@ -95,13 +95,13 @@ def config_meta_genia() -> PreprocessorConfig:
     name_of_this_function = sys._getframe().f_code.co_name
     return PreprocessorConfig(
         preprocessor_config_name=name_of_this_function,
-        preprocessor_class_path='preprocessors.meta.MetaPreprocessor',
+        preprocessor_class_path='preprocessing.preprocessors.meta.MetaPreprocessor',
         preprocessor_class_init_params={
             'preprocessor_type': name_of_this_function,
             'annotators': [],
             'test_files_folder_full_path': './raw_data_for_meta/genia/test_predictions',
             'valid_files_folder_full_path': './raw_data_for_meta/genia/validation_predictions',
-            'dataset_config_name': 'genia_config_vanilla',
+            'dataset_config_name': 'genia',
             'dataset': Dataset.genia
         }
     )

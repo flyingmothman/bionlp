@@ -1,7 +1,10 @@
-from structs import *
 import json
 from abc import ABC, abstractmethod
-from utils.structs import PreprocessorConfig
+from utils.structs import PreprocessorConfig, DatasetSplit, Sample, Dataset,\
+        PreprocessorRunType, SampleId, Annotation, AnnotationCollection
+from pydoc import locate
+
+
 from utils.universal import blue, green, red, \
         open_make_dirs, \
         create_directory_structure, print_section,\
