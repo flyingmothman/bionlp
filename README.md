@@ -120,11 +120,12 @@ Preprocessing involves preparing training data for models.
 <a name="preprocessing-ner"/>
 
 ### Preprocessing data for NER models
-Use the available prepreocessing configurations(see example below) 
-for NER models in `all_preprocessing_configs.py` to prepare training
-data for the 3 NER models.   
+Use the available prepreocessing configurations for NER models in `all_preprocessing_configs.py`  
+to prepare training data for the 3 NER models.   
 `./preprocess.py` shows how to preprocess the Genia dataset.
 
 <a name="preprocessing-meta"/>
 
 ### Preprocessing data for Meta
+Use available meta preprocessing configurations in `all_preprocessing_configs.py`.
+`./preprocess_meta.py` preprocesses the predictions of `SEQ` and `SpanPred` for GENIA in `./raw_data_for_meta/genia` to prepare the training data for Meta. 
