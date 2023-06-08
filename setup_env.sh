@@ -8,6 +8,7 @@ pip install transformers
 pip install flair
 pip install benepar
 pip install ipython
+pip install beautifulsoup4
 pip install overrides
 
 echo "Installing Pytorch"
