@@ -955,3 +955,26 @@ def evaluate_meta_predictions(meta_predictions_file_path: str, dataset_config_na
             gold_predictions.add(SampleAnnotation(str(gold_sample.id), gold_anno.label_type, int(gold_anno.begin_offset), int(gold_anno.end_offset)))
 
     print(get_f1_score_from_sets(gold_predictions, meta_predictions_set))
+
+
+def get_gold_annos_set_from_samples(samples: list[Sample]) -> set[SampleAnnotation]:
+    gold_annos = []
+    for sample in samples:
+        annos = [SampleAnnotation(sample.id, anno.label_type, anno.begin_offset, anno.end_offset)
+                 for anno in sample.annos.gold]
+        gold_annos.extend(annos)
+    return set(gold_annos)
+
+
+def get_gold_annos_set(dataset_config_name: str, split: DatasetSplit):
+    match split:
+        case DatasetSplit.valid:
+            samples = get_valid_samples_by_dataset_name(dataset_config_name=dataset_config_name)
+        case DatasetSplit.train:
+            samples = get_train_samples_by_dataset_name(dataset_config_name=dataset_config_name)
+        case DatasetSplit.test:
+            samples = get_test_samples_by_dataset_name(dataset_config_name=dataset_config_name)
+        case _:
+            raise RuntimeError(f"Do not support split {split}") 
+    return get_gold_annos_set_from_samples(samples)
+
