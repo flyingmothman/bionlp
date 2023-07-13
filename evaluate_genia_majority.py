@@ -7,3 +7,8 @@ def majority_genia_sentence_all():
             "./ensembling_data/majority/genia/experiment_genia_bionlp_all_adafactor_0_genia_config_vanilla_model_seq_large_crf_bio_test_epoch_2_predictions.tsv"
     ]
     return get_majority_voting_results(dataset_config_name='genia', test_prediction_file_paths=prediction_file_paths)
+
+f1, precision, recall = majority_genia_sentence_all()
+print("f1", f1)
+print("precision", precision)
+print("recall", recall)
